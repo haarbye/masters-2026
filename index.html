@@ -730,6 +730,44 @@
       letter-spacing: 0.5px;
     }
 
+    /* Collapsible sections */
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      padding: 14px 20px;
+      background: var(--masters-green);
+      color: white;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 4px 4px 0 0;
+      border: 2px solid var(--masters-green);
+      margin-bottom: 0;
+    }
+
+    .collapsible-header:hover { opacity: 0.92; }
+
+    .collapsible-header .toggle-icon {
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+
+    .collapsible-section.collapsed .collapsible-header {
+      border-radius: 4px;
+      margin-bottom: 28px;
+    }
+
+    .collapsible-section.collapsed .collapsible-body { display: none; }
+
+    .collapsible-body {
+      margin-bottom: 28px;
+    }
+
     .leaderboard-card {
       background: var(--card);
       border: 2px solid var(--border);
@@ -1170,7 +1208,7 @@
   </div>
 
   <div class="container">
-    <!-- Ranking -->
+    <!-- Ranking (always open) -->
     <div class="ranking-card">
       <div class="ranking-card-header">Rangering</div>
       <div id="rankingTable">
@@ -1179,72 +1217,80 @@
     </div>
 
     <!-- Round breakdown -->
-    <div class="round-breakdown" id="roundBreakdown"></div>
+    <div class="collapsible-section" data-section="rounds">
+      <div class="collapsible-header" onclick="toggleSection('rounds')">Poeng per runde <span class="toggle-icon">▲</span></div>
+      <div class="collapsible-body">
+        <div class="round-breakdown" id="roundBreakdown"></div>
+      </div>
+    </div>
 
     <!-- Admin panel (hidden, access via ?admin=masters2026) -->
     <div id="adminSection" style="display:none"></div>
 
-    <!-- Tournament stats -->
-    <div class="stats-section">
-      <div class="section-title">Turneringsstatistikk</div>
-      <div id="tournamentStats"></div>
+    <!-- Pick cards (dynamic) -->
+    <div class="collapsible-section" data-section="picks">
+      <div class="collapsible-header" onclick="toggleSection('picks')">Alle tips <span class="toggle-icon">▲</span></div>
+      <div class="collapsible-body">
+        <div class="pick-columns" id="pickColumns"></div>
+      </div>
     </div>
 
-    <!-- Pick cards (dynamic) -->
-    <div class="pick-columns" id="pickColumns"></div>
-
     <!-- Leaderboard -->
-    <div class="leaderboard-section">
-      <div class="section-title">Leaderboard</div>
-      <div class="leaderboard-card">
-        <div class="lb-header">
-          <div class="lb-sort-btn sort-active" data-sort="position" title="Sorter etter posisjon">Pos</div>
-          <div class="lb-sort-btn" data-sort="name" title="Sorter etter navn">Spiller</div>
-          <div class="lb-sort-btn text-center" data-sort="r1" title="Sorter etter R1">R1</div>
-          <div class="lb-sort-btn text-center" data-sort="r2" title="Sorter etter R2">R2</div>
-          <div class="lb-sort-btn text-center" data-sort="r3" title="Sorter etter R3">R3</div>
-          <div class="lb-sort-btn text-center" data-sort="r4" title="Sorter etter R4">R4</div>
-          <div class="lb-sort-btn text-center" data-sort="total" title="Sorter etter total">Total</div>
-          <div class="text-center">Thru</div>
-        </div>
-        <div id="leaderboard">
-          <div class="loading"><div class="spinner"></div>Henter leaderboard...</div>
+    <div class="collapsible-section" data-section="leaderboard">
+      <div class="collapsible-header" onclick="toggleSection('leaderboard')">Leaderboard <span class="toggle-icon">▲</span></div>
+      <div class="collapsible-body">
+        <div class="leaderboard-card">
+          <div class="lb-header">
+            <div class="lb-sort-btn sort-active" data-sort="position" title="Sorter etter posisjon">Pos</div>
+            <div class="lb-sort-btn" data-sort="name" title="Sorter etter navn">Spiller</div>
+            <div class="lb-sort-btn text-center" data-sort="r1" title="Sorter etter R1">R1</div>
+            <div class="lb-sort-btn text-center" data-sort="r2" title="Sorter etter R2">R2</div>
+            <div class="lb-sort-btn text-center" data-sort="r3" title="Sorter etter R3">R3</div>
+            <div class="lb-sort-btn text-center" data-sort="r4" title="Sorter etter R4">R4</div>
+            <div class="lb-sort-btn text-center" data-sort="total" title="Sorter etter total">Total</div>
+            <div class="text-center">Thru</div>
+          </div>
+          <div id="leaderboard">
+            <div class="loading"><div class="spinner"></div>Henter leaderboard...</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Registration (below leaderboard, above scoring) -->
+    <!-- Registration -->
     <div id="registrationSection"></div>
 
     <!-- Scoring -->
-    <div class="scoring-card">
-      <h3>Poengsystem</h3>
-
-      <div style="margin-bottom:18px">
-        <div style="font-size:13px;font-weight:700;color:var(--masters-green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Torsdag – Lørdag (R1–R3)</div>
-        <div class="scoring-grid">
-          <div class="scoring-item"><div class="label">Torsdag — spiller i topp 10</div><div class="value">1 poeng</div></div>
-          <div class="scoring-item"><div class="label">Fredag — spiller i topp 10</div><div class="value">2 poeng</div></div>
-          <div class="scoring-item"><div class="label">Lørdag — spiller i topp 10</div><div class="value">3 poeng</div></div>
-          <div class="scoring-item"><div class="label">Eksakt plassering torsdag</div><div class="value">+2 bonus</div></div>
-          <div class="scoring-item"><div class="label">Eksakt plassering fredag</div><div class="value">+3 bonus</div></div>
-          <div class="scoring-item"><div class="label">Eksakt plassering lørdag</div><div class="value">+5 bonus</div></div>
-          <div class="scoring-item"><div class="label">Spiller som er CUT</div><div class="value" style="color:#991b1b">-2 poeng</div></div>
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--masters-gold);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Søndag (R4) — Full pott</div>
-        <div class="scoring-grid">
-          <div class="scoring-item"><div class="label">Eksakt riktig vinner (#1)</div><div class="value">35 poeng</div></div>
-          <div class="scoring-item"><div class="label">Eksakt riktig #2</div><div class="value">15 poeng</div></div>
-          <div class="scoring-item"><div class="label">Eksakt riktig #3</div><div class="value">10 poeng</div></div>
-          <div class="scoring-item"><div class="label">Eksakt riktig #4–10</div><div class="value">4 poeng</div></div>
-          <div class="scoring-item"><div class="label">Tippa vinner, endte pall</div><div class="value">10 poeng</div></div>
-          <div class="scoring-item"><div class="label">Tippa pall, endte topp 10</div><div class="value">5 poeng</div></div>
-          <div class="scoring-item"><div class="label">I topp 10, feil plass</div><div class="value">3 poeng</div></div>
-          <div class="scoring-item"><div class="label">DQ / WD (diskvalifisert)</div><div class="value" style="color:#991b1b">-2 poeng</div></div>
-          <div class="scoring-item"><div class="label">Alle 3 pallplasser riktige</div><div class="value">+8 bonus</div></div>
+    <div class="collapsible-section collapsed" data-section="scoring">
+      <div class="collapsible-header" onclick="toggleSection('scoring')">Poengsystem <span class="toggle-icon">▼</span></div>
+      <div class="collapsible-body">
+        <div class="scoring-card" style="border-top:none;border-radius:0 0 4px 4px;margin-bottom:0">
+          <div style="margin-bottom:18px">
+            <div style="font-size:13px;font-weight:700;color:var(--masters-green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Torsdag – Lørdag (R1–R3)</div>
+            <div class="scoring-grid">
+              <div class="scoring-item"><div class="label">Torsdag — spiller i topp 10</div><div class="value">1 poeng</div></div>
+              <div class="scoring-item"><div class="label">Fredag — spiller i topp 10</div><div class="value">2 poeng</div></div>
+              <div class="scoring-item"><div class="label">Lørdag — spiller i topp 10</div><div class="value">3 poeng</div></div>
+              <div class="scoring-item"><div class="label">Eksakt plassering torsdag</div><div class="value">+2 bonus</div></div>
+              <div class="scoring-item"><div class="label">Eksakt plassering fredag</div><div class="value">+3 bonus</div></div>
+              <div class="scoring-item"><div class="label">Eksakt plassering lørdag</div><div class="value">+5 bonus</div></div>
+              <div class="scoring-item"><div class="label">Spiller som er CUT</div><div class="value" style="color:#991b1b">-2 poeng</div></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--masters-gold);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Søndag (R4) — Full pott</div>
+            <div class="scoring-grid">
+              <div class="scoring-item"><div class="label">Eksakt riktig vinner (#1)</div><div class="value">35 poeng</div></div>
+              <div class="scoring-item"><div class="label">Eksakt riktig #2</div><div class="value">15 poeng</div></div>
+              <div class="scoring-item"><div class="label">Eksakt riktig #3</div><div class="value">10 poeng</div></div>
+              <div class="scoring-item"><div class="label">Eksakt riktig #4–10</div><div class="value">4 poeng</div></div>
+              <div class="scoring-item"><div class="label">Tippa vinner, endte pall</div><div class="value">10 poeng</div></div>
+              <div class="scoring-item"><div class="label">Tippa pall, endte topp 10</div><div class="value">5 poeng</div></div>
+              <div class="scoring-item"><div class="label">I topp 10, feil plass</div><div class="value">3 poeng</div></div>
+              <div class="scoring-item"><div class="label">DQ / WD (diskvalifisert)</div><div class="value" style="color:#991b1b">-2 poeng</div></div>
+              <div class="scoring-item"><div class="label">Alle 3 pallplasser riktige</div><div class="value">+8 bonus</div></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1255,6 +1301,15 @@
     </div>
   </div>
 
+  <script>
+    function toggleSection(name) {
+      const section = document.querySelector(`.collapsible-section[data-section="${name}"]`);
+      if (!section) return;
+      section.classList.toggle('collapsed');
+      const icon = section.querySelector('.toggle-icon');
+      if (icon) icon.textContent = section.classList.contains('collapsed') ? '▼' : '▲';
+    }
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

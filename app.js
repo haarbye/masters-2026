@@ -1394,7 +1394,6 @@ async function updateDashboard() {
     renderTicker(leaderboardData, challengers);
     renderRanking(challengers, finalResults);
     renderRoundBreakdown(challengers, resultsByRound, currentRound);
-    renderTournamentStats(leaderboardData, challengers, finalResults);
     renderPickCards(challengers, finalResults);
     renderLeaderboard(leaderboardData, challengers);
 
