@@ -403,9 +403,12 @@ function parseESPNData(data) {
         if (completedRounds === 2 && maxRoundsInField >= 3) isCut = true;
       }
 
+      const athleteId = c.id || '';
+      const headshotUrl = athleteId ? `https://a.espncdn.com/i/headshots/golf/players/full/${athleteId}.png` : '';
+
       result.push({
         name, position: pos, posDisplay: String(pos), totalScore,
-        rounds, thru, holeData, isCut, isDQ,
+        rounds, thru, holeData, isCut, isDQ, athleteId, headshotUrl,
         countryAlt: athlete.flag?.alt || '', countryFlagUrl: athlete.flag?.href || '',
       });
     }
@@ -697,6 +700,7 @@ function renderLeaderboard(leaderboard, challengers) {
         <div class="lb-row" data-player="${escAttr(entry.name)}" style="cursor:pointer">
           <div class="lb-pos">${entry.posDisplay}</div>
           <div class="lb-player">
+            ${entry.headshotUrl ? `<img class="lb-headshot" src="${entry.headshotUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
             <span class="flag">${flagEmoji}</span>
             <span class="name">${esc(entry.name)}</span>
             <span class="picked-by">${dots}</span>
