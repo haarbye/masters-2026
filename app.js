@@ -172,6 +172,11 @@ function esc(str) {
   return d.innerHTML;
 }
 
+// Safe escaping for data-attributes (preserves original value in dataset)
+function escAttr(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+
 // --- Name matching ---
 function normalizeName(name) {
   return name.toLowerCase().replace(/[''\.]/g, '').replace(/\s+/g, ' ').trim();
@@ -276,8 +281,8 @@ function calcRoundPoints(picks, leaderboard, roundNum) {
         // Søndag: DQ gir straff
         pts = CUT_PENALTY;
         cuts++;
-      } else if (!isSunday && isCut) {
-        // R2–R3: CUT gir straff
+      } else if (!isSunday && isCut && roundNum >= 2) {
+        // R2–R3: CUT gir straff (ikke R1 — CUT skjer etter fredag)
         pts = CUT_PENALTY;
         cuts++;
       } else if (pos <= 10) {
@@ -386,10 +391,16 @@ function parseESPNData(data) {
       let isDQ = scoreStr === 'DQ' || thruStr === 'DQ' || scoreStr.includes('DQ') || statusDesc.includes('DQ')
               || scoreStr === 'WD' || scoreStr.includes('WD') || statusDesc.includes('WITHDRAW');
 
-      // Fallback CUT: round >= 3 and player only has 2 completed rounds
+      // Fallback CUT: round >= 3 AND some players already have R3 data (so cut has happened)
       if (!isCut && !isDQ && round >= 3 && c.linescores) {
         const completedRounds = c.linescores.filter(ls => ls.displayValue !== undefined && ls.displayValue !== '-').length;
-        if (completedRounds === 2 && c.linescores.length === 2) isCut = true;
+        // Only mark as cut if this player has exactly 2 rounds AND other players have 3+
+        // (prevents false positives on Saturday morning before R3 tee times)
+        const maxRoundsInField = competitors.reduce((max, p) => {
+          const pr = (p.linescores || []).filter(ls => ls.displayValue !== undefined && ls.displayValue !== '-').length;
+          return Math.max(max, pr);
+        }, 0);
+        if (completedRounds === 2 && maxRoundsInField >= 3) isCut = true;
       }
 
       result.push({
@@ -573,7 +584,7 @@ function renderPickCards(challengers, results) {
 
     html += `
       <div class="pick-card ${isExpanded ? 'expanded' : 'collapsed'}">
-        <div class="pick-card-header" data-name="${esc(c.name)}" style="cursor:pointer">
+        <div class="pick-card-header" data-name="${escAttr(c.name)}" style="cursor:pointer">
           <div class="user-badge">
             <span class="user-dot" style="background:${color.dot}"></span>
             <h2>${esc(c.name)}</h2>
@@ -683,7 +694,7 @@ function renderLeaderboard(leaderboard, challengers) {
 
     html += `
       <div class="lb-entry ${highlight}">
-        <div class="lb-row" data-player="${esc(entry.name)}" style="cursor:pointer">
+        <div class="lb-row" data-player="${escAttr(entry.name)}" style="cursor:pointer">
           <div class="lb-pos">${entry.posDisplay}</div>
           <div class="lb-player">
             <span class="flag">${flagEmoji}</span>
@@ -998,7 +1009,7 @@ function showAutocomplete(input) {
 
   dropdown.innerHTML = matches.map(name => {
     const info = getPlayerInfo(name);
-    return `<div class="reg-ac-option" data-name="${esc(name)}">${info.flag} ${esc(name)}</div>`;
+    return `<div class="reg-ac-option" data-name="${escAttr(name)}">${info.flag} ${esc(name)}</div>`;
   }).join('');
 
   dropdown.style.display = 'block';
@@ -1110,11 +1121,40 @@ async function submitRegistration() {
 // MAIN UPDATE
 // ============================================================
 
+let lastGoodESPNData = null;
+
+async function fetchESPNWithRetry(retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const resp = await fetch('https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      lastGoodESPNData = data; // cache last good response
+      return data;
+    } catch (err) {
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 async function updateDashboard() {
   try {
-    const resp = await fetch('https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard');
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
+    let data;
+    try {
+      data = await fetchESPNWithRetry();
+    } catch (err) {
+      // Use last good data if available
+      if (lastGoodESPNData) {
+        console.warn('ESPN fetch failed, using cached data:', err.message);
+        data = lastGoodESPNData;
+      } else {
+        throw err;
+      }
+    }
 
     const parsed = parseESPNData(data);
     leaderboardData = parsed.leaderboard;
@@ -1133,12 +1173,28 @@ async function updateDashboard() {
     const challengers = await getAllChallengers();
     lastChallengers = challengers;
 
-    // Calculate points for each challenger
-    const finalResults = challengers.map(c => calcRoundPoints(c.picks, leaderboardData, currentRound));
-
-    // Round breakdown
+    // Calculate points for ALL rounds (cumulative)
     const resultsByRound = {};
-    resultsByRound[currentRound] = finalResults.map(r => r.total);
+    const cumulativeResults = challengers.map(() => ({ total: 0, hits: 0, cuts: 0, details: [] }));
+
+    for (let r = 1; r <= currentRound; r++) {
+      const roundResults = challengers.map(c => calcRoundPoints(c.picks, leaderboardData, r));
+      resultsByRound[r] = roundResults.map(res => res.total);
+
+      // Accumulate totals
+      roundResults.forEach((res, i) => {
+        cumulativeResults[i].total += res.total;
+        cumulativeResults[i].hits = res.hits; // current round hits (not cumulative)
+        cumulativeResults[i].cuts += res.cuts;
+      });
+    }
+
+    // Use current round details for pick cards (shows live positions)
+    const currentRoundResults = challengers.map(c => calcRoundPoints(c.picks, leaderboardData, currentRound));
+    const finalResults = cumulativeResults.map((cum, i) => ({
+      ...currentRoundResults[i],
+      total: cum.total, // cumulative total across all rounds
+    }));
 
     // Render everything
     renderStatus(tournamentStatus, currentRound);
@@ -1187,7 +1243,7 @@ async function renderAdminPanel() {
         <span class="rank-dot" style="background:${color.dot}"></span>
         <span class="admin-name">${esc(c.name)} ${isBuiltin ? '<em>(fast)</em>' : ''}</span>
         <span class="admin-picks">${c.picks.map(p => esc(p)).join(', ')}</span>
-        ${!isBuiltin ? `<button class="admin-remove-btn" data-name="${esc(c.name)}">Fjern</button>` : ''}
+        ${!isBuiltin ? `<button class="admin-remove-btn" data-name="${escAttr(c.name)}">Fjern</button>` : ''}
       </div>`;
   });
 
