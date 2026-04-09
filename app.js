@@ -627,6 +627,137 @@ function renderPickCards(challengers, results) {
   });
 }
 
+// ============================================================
+// TOURNAMENT STATS
+// ============================================================
+
+function renderTournamentStats(leaderboard, challengers, results) {
+  const container = document.getElementById('tournamentStats');
+  if (!container || leaderboard.length === 0) return;
+
+  // Collect hole-by-hole data across all players
+  let totalBirdies = 0, totalEagles = 0, totalBogeys = 0, totalDblBogeys = 0;
+  let totalPars = 0, totalHoles = 0;
+  const holeStats = {}; // hole -> { birdies, bogeys, avg, toughest }
+  let lowestRound = { score: 999, player: '' };
+  let mostBirdies = { count: 0, player: '' };
+
+  for (const entry of leaderboard) {
+    if (!entry.holeData) continue;
+    let playerBirdies = 0;
+
+    for (const rNum of Object.keys(entry.holeData)) {
+      const holes = entry.holeData[rNum];
+      let roundStrokes = 0;
+
+      for (const h of holes) {
+        totalHoles++;
+        const tp = h.toPar;
+        let n = 0;
+        if (tp !== 'E') { try { n = parseInt(tp); } catch {} }
+
+        if (n <= -2) { totalEagles++; playerBirdies += 2; }
+        else if (n === -1) { totalBirdies++; playerBirdies++; }
+        else if (n === 0) { totalPars++; }
+        else if (n === 1) { totalBogeys++; }
+        else if (n >= 2) { totalDblBogeys++; }
+
+        roundStrokes += h.strokes;
+
+        // Per-hole stats
+        if (!holeStats[h.hole]) holeStats[h.hole] = { total: 0, count: 0, birdies: 0, bogeys: 0 };
+        holeStats[h.hole].total += n;
+        holeStats[h.hole].count++;
+        if (n < 0) holeStats[h.hole].birdies++;
+        if (n > 0) holeStats[h.hole].bogeys++;
+      }
+
+      // Check lowest round
+      if (holes.length === 18 && roundStrokes < lowestRound.score) {
+        lowestRound = { score: roundStrokes, player: entry.name };
+      }
+    }
+
+    if (playerBirdies > mostBirdies.count) {
+      mostBirdies = { count: playerBirdies, player: entry.name };
+    }
+  }
+
+  // Find hardest and easiest holes
+  let hardestHole = { hole: '-', avg: -99 };
+  let easiestHole = { hole: '-', avg: 99 };
+  for (const [hole, stats] of Object.entries(holeStats)) {
+    if (stats.count < 5) continue;
+    const avg = stats.total / stats.count;
+    if (avg > hardestHole.avg) hardestHole = { hole, avg, bogeys: stats.bogeys, count: stats.count };
+    if (avg < easiestHole.avg) easiestHole = { hole, avg, birdies: stats.birdies, count: stats.count };
+  }
+
+  // Tipping stats
+  const totalPicks = challengers.length * 10;
+  let picksInTop10 = 0;
+  let picksExact = 0;
+  for (const res of results) {
+    for (const d of res.details) {
+      if (d.leaderboardPos !== null && d.leaderboardPos <= 10) picksInTop10++;
+      if (d.leaderboardPos !== null && d.leaderboardPos === d.pickRank && d.leaderboardPos <= 10) picksExact++;
+    }
+  }
+
+  const birdieRate = totalHoles > 0 ? (totalBirdies / totalHoles * 100).toFixed(1) : '0';
+  const bogeyRate = totalHoles > 0 ? (totalBogeys / totalHoles * 100).toFixed(1) : '0';
+
+  container.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card stat-highlight">
+        <div class="stat-value">${leaderboard[0] ? esc(leaderboard[0].name) : '-'}</div>
+        <div class="stat-label">Leder (${leaderboard[0]?.totalScore || '-'})</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalBirdies}</div>
+        <div class="stat-label">Birdies (${birdieRate}%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalEagles}</div>
+        <div class="stat-label">Eagles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalBogeys + totalDblBogeys}</div>
+        <div class="stat-label">Bogeys+ (${bogeyRate}%)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalHoles}</div>
+        <div class="stat-label">Hull spilt</div>
+      </div>
+      <div class="stat-card stat-danger">
+        <div class="stat-value">Hull ${hardestHole.hole}</div>
+        <div class="stat-label">Vanskeligst (+${hardestHole.avg?.toFixed(2) || '?'})</div>
+      </div>
+      <div class="stat-card stat-success">
+        <div class="stat-value">Hull ${easiestHole.hole}</div>
+        <div class="stat-label">Enklest (${easiestHole.avg?.toFixed(2) || '?'})</div>
+      </div>
+      ${lowestRound.score < 999 ? `
+      <div class="stat-card">
+        <div class="stat-value">${lowestRound.score}</div>
+        <div class="stat-label">Laveste runde (${esc(lowestRound.player)})</div>
+      </div>` : ''}
+      ${mostBirdies.count > 0 ? `
+      <div class="stat-card">
+        <div class="stat-value">${mostBirdies.count}</div>
+        <div class="stat-label">Flest birdies (${esc(mostBirdies.player)})</div>
+      </div>` : ''}
+      <div class="stat-card stat-tipping">
+        <div class="stat-value">${picksInTop10} / ${totalPicks}</div>
+        <div class="stat-label">Tips i topp 10</div>
+      </div>
+      <div class="stat-card stat-tipping">
+        <div class="stat-value">${picksExact}</div>
+        <div class="stat-label">Eksakte plasseringer</div>
+      </div>
+    </div>`;
+}
+
 // Augusta National par values
 const AUGUSTA_PAR = [4,5,4,3,4,3,4,5,4, 4,4,3,5,4,5,3,4,4]; // holes 1-18
 const AUGUSTA_OUT = AUGUSTA_PAR.slice(0,9).reduce((a,b)=>a+b,0); // 36
@@ -1205,6 +1336,7 @@ async function updateDashboard() {
     renderTicker(leaderboardData, challengers);
     renderRanking(challengers, finalResults);
     renderRoundBreakdown(challengers, resultsByRound, currentRound);
+    renderTournamentStats(leaderboardData, challengers, finalResults);
     renderPickCards(challengers, finalResults);
     renderLeaderboard(leaderboardData, challengers);
 

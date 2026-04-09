@@ -423,6 +423,54 @@
       gap: 8px;
     }
 
+    /* ===== TOURNAMENT STATS ===== */
+    .stats-section { margin-bottom: 28px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .stat-highlight {
+      border-color: var(--masters-gold);
+      background: linear-gradient(135deg, #fffbeb, #fef9e7);
+    }
+
+    .stat-highlight .stat-value { color: var(--masters-dark); font-size: 16px; }
+
+    .stat-danger { border-color: #fca5a5; }
+    .stat-danger .stat-value { color: #dc2626; }
+
+    .stat-success { border-color: #86efac; }
+    .stat-success .stat-value { color: var(--masters-green); }
+
+    .stat-tipping { border-color: var(--masters-green); background: #f0fdf4; }
+    .stat-tipping .stat-value { color: var(--masters-green); }
+
     /* ===== PICK CARDS ===== */
     .pick-columns {
       display: grid;
@@ -992,6 +1040,12 @@
 
     <!-- Admin panel (hidden, access via ?admin=masters2026) -->
     <div id="adminSection" style="display:none"></div>
+
+    <!-- Tournament stats -->
+    <div class="stats-section">
+      <div class="section-title">Turneringsstatistikk</div>
+      <div id="tournamentStats"></div>
+    </div>
 
     <!-- Pick cards (dynamic) -->
     <div class="pick-columns" id="pickColumns"></div>
