@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Masters 2026 — Tippekonkurranse</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --masters-green: #006747;
+      --masters-dark: #004d35;
+      --masters-gold: #c8a951;
+      --masters-cream: #f5f0e8;
+      --masters-yellow: #f2c94c;
+      --bg: #f5f0e8;
+      --card: #ffffff;
+      --text: #1a2e1a;
+      --text-muted: #5a6b5a;
+      --border: #d4c9b0;
+      --border-light: #e8dece;
+      --positive: #006747;
+      --negative: #c0392b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER — Augusta style ===== */
+    .header {
+      background: var(--masters-green);
+      color: white;
+      padding: 32px 0 28px;
+      text-align: center;
+      border-bottom: 4px solid var(--masters-gold);
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .header .subtitle {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      font-weight: 400;
+      font-style: italic;
+      opacity: 0.9;
+      letter-spacing: 0.5px;
+    }
+
+    .tournament-info {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 14px;
+      font-size: 12px;
+      opacity: 0.85;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .tournament-info span { display: flex; align-items: center; gap: 6px; }
+
+    .live-dot {
+      width: 8px; height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ===== TICKER ===== */
+    .ticker-wrap {
+      background: #1a2e1a;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      border-bottom: 2px solid var(--masters-gold);
+    }
+
+    .ticker-wrap::before, .ticker-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 60px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .ticker-wrap::before { left: 0; background: linear-gradient(90deg, #1a2e1a, transparent); }
+    .ticker-wrap::after { right: 0; background: linear-gradient(90deg, transparent, #1a2e1a); }
+
+    .ticker-track {
+      display: inline-flex;
+      animation: ticker-scroll 30s linear infinite;
+    }
+
+    .ticker-track:hover { animation-play-state: paused; }
+
+    @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      font-size: 13px;
+      color: #d4c9b0;
+      border-right: 1px solid rgba(200,169,81,0.15);
+    }
+
+    .ticker-item .ticker-pos { font-weight: 800; min-width: 24px; }
+    .ticker-item .ticker-pos.t-gold { color: var(--masters-gold); }
+    .ticker-item .ticker-pos.t-silver { color: #d1d5db; }
+    .ticker-item .ticker-pos.t-bronze { color: #cd7f32; }
+    .ticker-item .ticker-pos.t-normal { color: #7a8a7a; }
+
+    .ticker-item .ticker-name { font-weight: 600; color: #ffffff; }
+
+    .ticker-item .ticker-score {
+      font-weight: 700; padding: 1px 8px;
+      border-radius: 3px; font-size: 12px;
+    }
+
+    .ticker-item .ticker-score.under { background: rgba(192,57,43,0.25); color: #f5a5a5; }
+    .ticker-item .ticker-score.even { background: rgba(255,255,255,0.1); color: #d4c9b0; }
+    .ticker-item .ticker-score.over { background: rgba(255,255,255,0.06); color: #7a8a7a; }
+    .ticker-item .ticker-flag { font-size: 16px; }
+    .ticker-item .ticker-picked { display: inline-flex; gap: 2px; margin-left: 2px; }
+    .ticker-item .tp-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ===== CONTAINER ===== */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 16px;
+    }
+
+    /* ===== RANKING TABLE ===== */
+    .ranking-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .ranking-card-header {
+      background: var(--masters-green);
+      color: white;
+      padding: 14px 20px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .rank-row {
+      display: grid;
+      grid-template-columns: 44px 1fr auto auto;
+      align-items: center;
+      padding: 14px 20px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .rank-row:last-child { border-bottom: none; }
+    .rank-row:first-child { background: #fafaf5; }
+
+    .rank-pos { font-size: 18px; text-align: center; }
+
+    .rank-main { display: flex; flex-direction: column; gap: 6px; }
+    .rank-name { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .rank-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    .rank-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: var(--border-light);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .rank-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .rank-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      min-width: 70px;
+    }
+
+    .rank-hits { font-size: 11px; color: var(--text-muted); }
+    .rank-exact { font-size: 11px; color: var(--masters-green); font-weight: 600; }
+
+    .rank-pts { font-size: 22px; font-weight: 800; min-width: 80px; text-align: right; }
+    .rank-pts-label { font-size: 12px; font-weight: 600; opacity: 0.6; }
+    .rank-diff { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+
+    /* ===== ROUND BREAKDOWN ===== */
+    .round-breakdown {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .round-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .round-card.active-round {
+      border-color: var(--masters-green);
+      box-shadow: 0 0 0 1px var(--masters-green);
+    }
+
+    .round-card .round-label {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .round-card .round-scores { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    .round-card .rs { display: flex; flex-direction: column; align-items: center; }
+    .round-card .rs .dot { width: 8px; height: 8px; border-radius: 50%; margin-bottom: 4px; }
+    .round-card .rs .pts { font-size: 16px; font-weight: 800; }
+    .round-card .mult { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ===== REGISTRATION ===== */
+    .reg-card {
+      background: var(--card);
+      border: 2px solid var(--masters-gold);
+      border-radius: 4px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .reg-header {
+      background: var(--masters-green);
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .reg-header h3 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .reg-deadline {
+      font-size: 12px;
+      background: rgba(255,255,255,0.15);
+      padding: 4px 12px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .reg-form { padding: 20px; }
+
+    .reg-name-row { margin-bottom: 16px; }
+
+    .reg-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+
+    .reg-input:focus {
+      outline: none;
+      border-color: var(--masters-green);
+    }
+
+    .reg-picks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .reg-pick-slot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reg-pick-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      min-width: 28px;
+    }
+
+    .reg-ac-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .reg-ac-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 2px solid var(--masters-green);
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      z-index: 100;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .reg-ac-option {
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .reg-ac-option:hover { background: var(--masters-cream); }
+    .reg-ac-option:last-child { border-bottom: none; }
+
+    .reg-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reg-btn {
+      background: var(--masters-green);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s;
+    }
+
+    .reg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .reg-btn:not(:disabled):hover { opacity: 0.9; }
+
+    .reg-error { color: var(--negative); font-size: 13px; font-weight: 600; }
+
+    .reg-share {
+      padding: 16px 20px;
+      background: #f0fdf4;
+      border-top: 1px solid #d1fae5;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reg-share-text { font-weight: 700; color: var(--masters-green); }
+
+    .reg-copy-btn {
+      background: var(--masters-gold);
+      color: var(--text);
+      border: none;
+      padding: 8px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .reg-copy-btn:hover { opacity: 0.9; }
+
+    .reg-copied { font-size: 13px; color: var(--masters-green); font-weight: 600; }
+
+    .reg-closed {
+      padding: 16px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===== PICK CARDS ===== */
+    .pick-columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .pick-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .pick-card-header {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+      background: #fafaf5;
+    }
+
+    .pick-card-header .user-badge {
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .user-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .pick-card-header h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px; font-weight: 700;
+    }
+
+    .pick-card-header .round-pts { font-size: 13px; font-weight: 700; }
+
+    .pick-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pick-summary {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .pick-toggle {
+      font-size: 11px;
+      color: var(--text-muted);
+      width: 18px;
+      text-align: center;
+    }
+
+    .pick-card.collapsed .pick-card-header {
+      border-bottom: none;
+    }
+
+    .pick-card.collapsed:hover .pick-card-header {
+      background: #f0ebe0;
+    }
+
+    .pick-row {
+      display: grid;
+      grid-template-columns: 24px 1fr auto auto;
+      align-items: center;
+      padding: 7px 14px;
+      gap: 8px;
+      border-bottom: 1px solid #f0ebe0;
+    }
+
+    .pick-row:last-child { border-bottom: none; }
+    .pick-row.in-top10 { background: #f0f8f0; }
+    .pick-row.in-top3 { background: #ddf0dd; }
+    .pick-row.is-leader { background: linear-gradient(90deg, #fef9c3, transparent); }
+
+    .pick-rank { font-size: 13px; font-weight: 600; color: var(--text-muted); text-align: center; }
+
+    .pick-player { display: flex; align-items: center; gap: 8px; }
+    .pick-player .flag { font-size: 18px; line-height: 1; }
+    .pick-player .info { display: flex; flex-direction: column; }
+    .pick-player .player-name { font-size: 13px; font-weight: 600; }
+    .pick-player .country-name { font-size: 11px; color: var(--text-muted); }
+
+    .pick-pos {
+      font-size: 12px; font-weight: 700;
+      padding: 2px 8px; border-radius: 3px;
+      text-align: center; min-width: 40px;
+    }
+
+    .pick-pos.top1 { background: var(--masters-gold); color: #3d2e00; }
+    .pick-pos.top3 { background: #c6e6c6; color: #0a4a0a; }
+    .pick-pos.top5 { background: #d6e8f0; color: #1a3a5c; }
+    .pick-pos.top10 { background: #ede8de; color: #4a4535; }
+    .pick-pos.outside { background: transparent; color: #b0a890; }
+    .pick-pos.cut { background: #fecaca; color: #991b1b; }
+    .pick-row.is-cut { background: #fef2f2; opacity: 0.7; }
+    .pick-row.is-cut .player-name { text-decoration: line-through; color: #9ca3af; }
+
+    .pick-pts { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
+    .pick-pts.has-pts { color: var(--masters-green); }
+    .pick-pts.no-pts { color: #d1c9b0; }
+
+    /* ===== LEADERBOARD ===== */
+    .leaderboard-section { margin-bottom: 28px; }
+
+    .section-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .leaderboard-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .lb-header {
+      display: grid;
+      grid-template-columns: 48px 1fr repeat(4, 56px) 72px 72px;
+      padding: 10px 20px;
+      font-size: 11px; font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--masters-green);
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 48px 1fr repeat(4, 56px) 72px 72px;
+      padding: 10px 20px;
+      font-size: 14px;
+      align-items: center;
+      border-bottom: 1px solid #f0ebe0;
+    }
+
+    .lb-row:hover { background: #fafaf5; }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row.highlighted { background: #fef9e7; }
+
+    .lb-pos { font-weight: 700; color: var(--text-muted); }
+
+    .lb-player { display: flex; align-items: center; gap: 8px; }
+    .lb-player .flag { font-size: 18px; }
+    .lb-player .name { font-weight: 600; }
+    .lb-player .picked-by { display: flex; gap: 3px; margin-left: 4px; }
+
+    .mini-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    .lb-round { text-align: center; font-size: 13px; color: var(--text-muted); }
+
+    .lb-total { text-align: center; font-weight: 700; }
+    .lb-total.under-par { color: var(--negative); }
+    .lb-total.over-par { color: var(--text-muted); }
+    .lb-total.even-par { color: var(--text); }
+
+    .lb-thru { text-align: center; font-size: 13px; color: var(--text-muted); }
+
+    /* Sortable headers */
+    .lb-sort-btn { cursor: pointer; user-select: none; }
+    .lb-sort-btn:hover { opacity: 0.75; }
+    .lb-sort-btn.sort-active { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Expandable entries */
+    .lb-entry { border-bottom: 1px solid #f0ebe0; }
+    .lb-entry:last-child { border-bottom: none; }
+    .lb-row { border-bottom: none; }
+
+    /* Scorecard */
+    .lb-scorecard {
+      padding: 12px 16px 16px;
+      background: #fafaf5;
+      border-top: 1px solid var(--border-light);
+      overflow-x: auto;
+    }
+
+    .sc-round-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      margin-top: 10px;
+    }
+
+    .sc-round-label:first-child { margin-top: 0; }
+
+    .sc-table {
+      display: grid;
+      grid-template-rows: auto auto auto;
+      margin-bottom: 8px;
+      min-width: 620px;
+    }
+
+    .sc-row {
+      display: grid;
+      grid-template-columns: 42px repeat(9, 1fr) 32px repeat(9, 1fr) 32px 36px;
+      gap: 0;
+    }
+
+    .sc-cell {
+      padding: 4px 2px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 500;
+      border-right: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .sc-cell:last-child { border-right: none; }
+
+    .sc-label {
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .sc-header .sc-cell { color: var(--text-muted); font-size: 10px; font-weight: 700; }
+    .sc-par .sc-cell { color: var(--text-muted); font-size: 11px; background: rgba(0,0,0,0.02); }
+    .sc-score .sc-cell { font-weight: 700; font-size: 12px; }
+
+    .sc-out, .sc-in {
+      font-weight: 800 !important;
+      background: rgba(0,0,0,0.04) !important;
+      border-left: 2px solid var(--border) !important;
+      border-right: 2px solid var(--border) !important;
+    }
+
+    .sc-tot {
+      font-weight: 800 !important;
+      background: rgba(0,0,0,0.06) !important;
+      border-left: 2px solid var(--border) !important;
+    }
+
+    /* Hole score symbols — traditional PGA scorecard */
+    .sc-score .sc-cell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sc-eagle .sc-num,
+    .sc-birdie .sc-num,
+    .sc-bogey .sc-num,
+    .sc-dbl-bogey .sc-num {
+      position: relative;
+      z-index: 1;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      font-size: 11px;
+    }
+
+    /* Birdie = single circle outline */
+    .sc-birdie .sc-num {
+      border: 1.5px solid #333;
+      border-radius: 50%;
+    }
+
+    /* Eagle = concentric double circle outlines */
+    .sc-eagle .sc-num {
+      border: 1.5px solid #333;
+      border-radius: 50%;
+    }
+    .sc-eagle .sc-num::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border: 1.5px solid #333;
+      border-radius: 50%;
+    }
+
+    /* Bogey = single square outline */
+    .sc-bogey .sc-num {
+      border: 1.5px solid #333;
+      border-radius: 1px;
+    }
+
+    /* Double bogey+ = concentric double square outlines */
+    .sc-dbl-bogey .sc-num {
+      border: 1.5px solid #333;
+      border-radius: 1px;
+    }
+    .sc-dbl-bogey .sc-num::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border: 1.5px solid #333;
+      border-radius: 1px;
+    }
+
+    .sc-empty {
+      padding: 12px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 { font-size: 24px; }
+      .header .subtitle { font-size: 13px; }
+      .tournament-info { flex-wrap: wrap; gap: 8px; font-size: 11px; }
+      .container { padding: 16px 10px; }
+
+      /* Ranking */
+      .rank-row { grid-template-columns: 36px 1fr auto; gap: 8px; padding: 12px 14px; }
+      .rank-stats { display: none; }
+      .rank-pts { font-size: 18px; min-width: 60px; }
+      .rank-name { font-size: 14px; }
+
+      /* Round breakdown */
+      .round-breakdown { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .round-card .rs .pts { font-size: 14px; }
+
+      /* Pick cards */
+      .pick-columns { grid-template-columns: 1fr; }
+      .pick-row { grid-template-columns: 20px 1fr auto auto; padding: 6px 10px; gap: 6px; }
+      .pick-player .flag { font-size: 16px; }
+      .pick-player .player-name { font-size: 12px; }
+      .pick-player .country-name { font-size: 10px; }
+      .pick-pos { font-size: 11px; padding: 2px 6px; min-width: 34px; }
+      .pick-pts { font-size: 12px; min-width: 28px; }
+
+      /* Leaderboard */
+      .lb-header, .lb-row { grid-template-columns: 36px 1fr 56px 56px; padding: 8px 10px; font-size: 13px; }
+      .lb-header > :nth-child(3), .lb-header > :nth-child(4), .lb-header > :nth-child(5),
+      .lb-row > :nth-child(3), .lb-row > :nth-child(4), .lb-row > :nth-child(5) { display: none; }
+      .lb-player .name { font-size: 13px; }
+      .lb-player .flag { font-size: 15px; }
+
+      /* Registration */
+      .reg-picks-grid { grid-template-columns: 1fr; }
+      .reg-header { flex-direction: column; gap: 8px; }
+      .reg-header h3 { font-size: 14px; }
+
+      /* Scoring */
+      .scoring-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .scoring-item .label { font-size: 11px; }
+      .scoring-item .value { font-size: 13px; }
+
+      /* Scorecard */
+      .sc-table { min-width: 560px; }
+    }
+
+    @media (max-width: 400px) {
+      .rank-row { grid-template-columns: 30px 1fr auto; padding: 10px; }
+      .rank-bar-wrap { display: none; }
+      .round-breakdown { grid-template-columns: repeat(2, 1fr); }
+      .scoring-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== SCORING CARD ===== */
+    .scoring-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .scoring-card h3 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .scoring-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .scoring-item { padding: 10px 14px; background: var(--bg); border-radius: 4px; border: 1px solid var(--border-light); }
+    .scoring-item .label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+    .scoring-item .value { font-size: 15px; font-weight: 700; }
+
+    /* ===== STATUS BAR ===== */
+    .status-bar {
+      text-align: center; font-size: 12px;
+      color: var(--text-muted); padding: 16px;
+    }
+
+    .status-bar .update-time { font-weight: 600; }
+
+    /* ===== LOADING ===== */
+    .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+
+    .loading .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--masters-green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .score-bump { animation: bump 0.4s ease; }
+    @keyframes bump { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+    .text-center { text-align: center; }
+
+    /* ===== ADMIN PANEL ===== */
+    .admin-card {
+      background: #1a2e1a;
+      border: 2px solid #c0392b;
+      border-radius: 4px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .admin-header {
+      background: #c0392b;
+      color: white;
+      padding: 10px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .admin-body {
+      padding: 20px;
+      color: #d4c9b0;
+      font-size: 13px;
+    }
+
+    .admin-body h4 {
+      color: var(--masters-gold);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 20px 0 10px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(200,169,81,0.2);
+    }
+
+    .admin-body h4:first-child { margin-top: 0; }
+
+    .admin-challengers { display: flex; flex-direction: column; gap: 8px; }
+
+    .admin-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      flex-wrap: wrap;
+    }
+
+    .admin-name { font-weight: 700; color: #fff; min-width: 100px; }
+    .admin-name em { font-weight: 400; font-size: 11px; color: #7a8a7a; }
+
+    .admin-picks {
+      flex: 1;
+      font-size: 11px;
+      color: #7a8a7a;
+      line-height: 1.5;
+    }
+
+    .admin-remove-btn {
+      background: #c0392b;
+      color: white;
+      border: none;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .admin-remove-btn:hover { opacity: 0.8; }
+
+    .admin-add, .admin-import, .admin-share {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .admin-body .reg-input {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+
+    .admin-body .reg-input:focus { border-color: var(--masters-gold); }
+    .admin-body .reg-input::placeholder { color: #5a6b5a; }
+
+    .admin-body .reg-btn {
+      align-self: flex-start;
+      background: var(--masters-gold);
+      color: #1a2e1a;
+    }
+
+    .admin-msg { color: var(--masters-gold); font-size: 12px; font-weight: 600; }
+
+    .admin-debug {
+      background: rgba(0,0,0,0.3);
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #7a8a7a;
+      word-break: break-all;
+      white-space: pre-wrap;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>The Masters 2026</h1>
+    <div class="subtitle">Tippekonkurranse — Hvem tipper best?</div>
+    <div class="tournament-info">
+      <span>Augusta National Golf Club</span>
+      <span>|</span>
+      <span>9.–12. april 2026</span>
+      <span>|</span>
+      <span><span class="live-dot" id="liveDot" style="display:none"></span> <span id="statusText">Laster...</span></span>
+    </div>
+  </div>
+
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <div class="container">
+    <!-- Ranking -->
+    <div class="ranking-card">
+      <div class="ranking-card-header">Rangering</div>
+      <div id="rankingTable">
+        <div class="loading"><div class="spinner"></div>Laster...</div>
+      </div>
+    </div>
+
+    <!-- Round breakdown -->
+    <div class="round-breakdown" id="roundBreakdown"></div>
+
+    <!-- Admin panel (hidden, access via ?admin=masters2026) -->
+    <div id="adminSection" style="display:none"></div>
+
+    <!-- Pick cards (dynamic) -->
+    <div class="pick-columns" id="pickColumns"></div>
+
+    <!-- Leaderboard -->
+    <div class="leaderboard-section">
+      <div class="section-title">Leaderboard</div>
+      <div class="leaderboard-card">
+        <div class="lb-header">
+          <div class="lb-sort-btn sort-active" data-sort="position" title="Sorter etter posisjon">Pos</div>
+          <div class="lb-sort-btn" data-sort="name" title="Sorter etter navn">Spiller</div>
+          <div class="lb-sort-btn text-center" data-sort="r1" title="Sorter etter R1">R1</div>
+          <div class="lb-sort-btn text-center" data-sort="r2" title="Sorter etter R2">R2</div>
+          <div class="lb-sort-btn text-center" data-sort="r3" title="Sorter etter R3">R3</div>
+          <div class="lb-sort-btn text-center" data-sort="r4" title="Sorter etter R4">R4</div>
+          <div class="lb-sort-btn text-center" data-sort="total" title="Sorter etter total">Total</div>
+          <div class="text-center">Thru</div>
+        </div>
+        <div id="leaderboard">
+          <div class="loading"><div class="spinner"></div>Henter leaderboard...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration (below leaderboard, above scoring) -->
+    <div id="registrationSection"></div>
+
+    <!-- Scoring -->
+    <div class="scoring-card">
+      <h3>Poengsystem</h3>
+
+      <div style="margin-bottom:18px">
+        <div style="font-size:13px;font-weight:700;color:var(--masters-green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Torsdag – Lørdag (R1–R3)</div>
+        <div class="scoring-grid">
+          <div class="scoring-item"><div class="label">Torsdag — spiller i topp 10</div><div class="value">1 poeng</div></div>
+          <div class="scoring-item"><div class="label">Fredag — spiller i topp 10</div><div class="value">2 poeng</div></div>
+          <div class="scoring-item"><div class="label">Lørdag — spiller i topp 10</div><div class="value">3 poeng</div></div>
+          <div class="scoring-item"><div class="label">Eksakt plassering torsdag</div><div class="value">+2 bonus</div></div>
+          <div class="scoring-item"><div class="label">Eksakt plassering fredag</div><div class="value">+3 bonus</div></div>
+          <div class="scoring-item"><div class="label">Eksakt plassering lørdag</div><div class="value">+5 bonus</div></div>
+          <div class="scoring-item"><div class="label">Spiller som er CUT</div><div class="value" style="color:#991b1b">-2 poeng</div></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--masters-gold);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Søndag (R4) — Full pott</div>
+        <div class="scoring-grid">
+          <div class="scoring-item"><div class="label">Eksakt riktig vinner (#1)</div><div class="value">35 poeng</div></div>
+          <div class="scoring-item"><div class="label">Eksakt riktig #2</div><div class="value">15 poeng</div></div>
+          <div class="scoring-item"><div class="label">Eksakt riktig #3</div><div class="value">10 poeng</div></div>
+          <div class="scoring-item"><div class="label">Eksakt riktig #4–10</div><div class="value">4 poeng</div></div>
+          <div class="scoring-item"><div class="label">Tippa vinner, endte pall</div><div class="value">10 poeng</div></div>
+          <div class="scoring-item"><div class="label">Tippa pall, endte topp 10</div><div class="value">5 poeng</div></div>
+          <div class="scoring-item"><div class="label">I topp 10, feil plass</div><div class="value">3 poeng</div></div>
+          <div class="scoring-item"><div class="label">DQ / WD (diskvalifisert)</div><div class="value" style="color:#991b1b">-2 poeng</div></div>
+          <div class="scoring-item"><div class="label">Alle 3 pallplasser riktige</div><div class="value">+8 bonus</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      Oppdateres automatisk hvert 60. sekund &middot;
+      Sist oppdatert: <span class="update-time" id="lastUpdate">—</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
