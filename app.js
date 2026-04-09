@@ -243,8 +243,8 @@ function getFlagEmoji(countryAlt) {
 //
 // R4 (søndag) — full pott:
 //   Eksakt riktig plass:  #1=35p  #2=15p  #3=10p  #4–10=4p
-//   Tippa vinner, endte på pall: 10p
-//   Tippa pall, endte i topp 10: 5p
+//   Valgt vinner, endte på pall: 10p
+//   Valgt pall, endte i topp 10: 5p
 //   I topp 10, feil plass: 3p
 //   DQ: -2p
 //   Alle 3 pallplasser riktige: +8 bonus
