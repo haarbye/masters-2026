@@ -753,13 +753,14 @@ function renderTournamentStats(leaderboard, challengers, results) {
     .sort((a, b) => a.num - b.num);
   const maxCount = Math.max(...sortedScores.map(s => s.count), 1);
 
+  const MAX_BAR_PX = 120;
   let distBarsHtml = sortedScores.map(s => {
-    const pct = s.count / maxCount * 100;
+    const barH = Math.max(Math.round(s.count / maxCount * MAX_BAR_PX), 4);
     const color = s.num < 0 ? '#dc2626' : s.num === 0 ? '#6b7280' : '#2563eb';
     return `
       <div class="dist-col" title="${s.score}: ${s.count} spillere">
         <div class="dist-count">${s.count}</div>
-        <div class="dist-bar" style="height:${pct}%;background:${color}"></div>
+        <div class="dist-bar" style="height:${barH}px;background:${color}"></div>
         <div class="dist-label">${s.score}</div>
       </div>`;
   }).join('');
