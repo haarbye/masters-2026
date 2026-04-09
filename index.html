@@ -426,50 +426,171 @@
     /* ===== TOURNAMENT STATS ===== */
     .stats-section { margin-bottom: 28px; }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 10px;
-    }
-
-    .stat-card {
+    /* Key numbers strip */
+    .key-numbers {
+      display: flex;
+      gap: 0;
+      margin-bottom: 14px;
       background: var(--card);
       border: 2px solid var(--border);
       border-radius: 4px;
-      padding: 14px 16px;
-      text-align: center;
+      overflow: hidden;
     }
 
-    .stat-value {
+    .key-num {
+      flex: 1;
+      padding: 12px 14px;
+      text-align: center;
+      border-right: 1px solid var(--border-light);
+    }
+
+    .key-num:last-child { border-right: none; }
+    .key-num:first-child { background: linear-gradient(135deg, #fffbeb, #fef9e7); }
+
+    .key-val { display: block; font-size: 16px; font-weight: 800; color: var(--text); }
+    .key-label { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
+
+    /* Charts layout */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+    }
+
+    .chart-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Hole difficulty bar chart */
+    .hbar-chart {
+      display: flex;
+      gap: 2px;
+      align-items: flex-end;
+      height: 140px;
+    }
+
+    .hbar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+      cursor: default;
+    }
+
+    .hbar-val { font-size: 9px; font-weight: 700; margin-bottom: 2px; }
+
+    .hbar-bar-wrap {
+      width: 100%;
+      height: 80px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .hbar-bar {
+      width: 70%;
+      min-height: 2px;
+      border-radius: 2px 2px 0 0;
+      transition: height 0.6s ease;
+    }
+
+    .hbar-label { font-size: 10px; font-weight: 700; color: var(--text); margin-top: 4px; }
+    .hbar-par { font-size: 9px; color: var(--text-muted); }
+
+    /* Donut chart */
+    .donut-wrap {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto;
+    }
+
+    .donut-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .donut-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
       font-size: 20px;
       font-weight: 800;
       color: var(--text);
-      line-height: 1.2;
+      line-height: 1.1;
     }
 
-    .stat-label {
+    .donut-center small { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+
+    .donut-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .donut-legend-item {
       font-size: 11px;
+      font-weight: 600;
       color: var(--text-muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .stat-highlight {
-      border-color: var(--masters-gold);
-      background: linear-gradient(135deg, #fffbeb, #fef9e7);
+    .donut-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+    /* Score distribution chart */
+    .dist-chart {
+      display: flex;
+      gap: 3px;
+      align-items: flex-end;
+      height: 100px;
     }
 
-    .stat-highlight .stat-value { color: var(--masters-dark); font-size: 16px; }
+    .dist-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+    }
 
-    .stat-danger { border-color: #fca5a5; }
-    .stat-danger .stat-value { color: #dc2626; }
+    .dist-count { font-size: 9px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px; }
 
-    .stat-success { border-color: #86efac; }
-    .stat-success .stat-value { color: var(--masters-green); }
+    .dist-bar {
+      width: 80%;
+      min-height: 2px;
+      border-radius: 2px 2px 0 0;
+      transition: height 0.6s ease;
+    }
 
-    .stat-tipping { border-color: var(--masters-green); background: #f0fdf4; }
-    .stat-tipping .stat-value { color: var(--masters-green); }
+    .dist-label { font-size: 10px; font-weight: 700; color: var(--text); margin-top: 4px; }
+
+    @media (max-width: 768px) {
+      .charts-row { grid-template-columns: 1fr; }
+      .key-numbers { flex-wrap: wrap; }
+      .key-num { min-width: 33%; }
+      .hbar-chart { height: 100px; }
+    }
 
     /* ===== PICK CARDS ===== */
     .pick-columns {

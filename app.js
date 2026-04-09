@@ -635,14 +635,19 @@ function renderTournamentStats(leaderboard, challengers, results) {
   const container = document.getElementById('tournamentStats');
   if (!container || leaderboard.length === 0) return;
 
-  // Collect hole-by-hole data across all players
+  // Collect all stats
   let totalBirdies = 0, totalEagles = 0, totalBogeys = 0, totalDblBogeys = 0;
   let totalPars = 0, totalHoles = 0;
-  const holeStats = {}; // hole -> { birdies, bogeys, avg, toughest }
+  const holeStats = {};
   let lowestRound = { score: 999, player: '' };
-  let mostBirdies = { count: 0, player: '' };
+  let mostBirdiesPlayer = { count: 0, player: '' };
+  const scoreDistribution = {};
 
   for (const entry of leaderboard) {
+    // Score distribution
+    const s = entry.totalScore;
+    scoreDistribution[s] = (scoreDistribution[s] || 0) + 1;
+
     if (!entry.holeData) continue;
     let playerBirdies = 0;
 
@@ -652,9 +657,8 @@ function renderTournamentStats(leaderboard, challengers, results) {
 
       for (const h of holes) {
         totalHoles++;
-        const tp = h.toPar;
         let n = 0;
-        if (tp !== 'E') { try { n = parseInt(tp); } catch {} }
+        if (h.toPar !== 'E') { try { n = parseInt(h.toPar); } catch {} }
 
         if (n <= -2) { totalEagles++; playerBirdies += 2; }
         else if (n === -1) { totalBirdies++; playerBirdies++; }
@@ -664,39 +668,27 @@ function renderTournamentStats(leaderboard, challengers, results) {
 
         roundStrokes += h.strokes;
 
-        // Per-hole stats
-        if (!holeStats[h.hole]) holeStats[h.hole] = { total: 0, count: 0, birdies: 0, bogeys: 0 };
+        if (!holeStats[h.hole]) holeStats[h.hole] = { total: 0, count: 0, birdies: 0, bogeys: 0, eagles: 0 };
         holeStats[h.hole].total += n;
         holeStats[h.hole].count++;
         if (n < 0) holeStats[h.hole].birdies++;
+        if (n <= -2) holeStats[h.hole].eagles++;
         if (n > 0) holeStats[h.hole].bogeys++;
       }
 
-      // Check lowest round
       if (holes.length === 18 && roundStrokes < lowestRound.score) {
         lowestRound = { score: roundStrokes, player: entry.name };
       }
     }
 
-    if (playerBirdies > mostBirdies.count) {
-      mostBirdies = { count: playerBirdies, player: entry.name };
+    if (playerBirdies > mostBirdiesPlayer.count) {
+      mostBirdiesPlayer = { count: playerBirdies, player: entry.name };
     }
-  }
-
-  // Find hardest and easiest holes
-  let hardestHole = { hole: '-', avg: -99 };
-  let easiestHole = { hole: '-', avg: 99 };
-  for (const [hole, stats] of Object.entries(holeStats)) {
-    if (stats.count < 5) continue;
-    const avg = stats.total / stats.count;
-    if (avg > hardestHole.avg) hardestHole = { hole, avg, bogeys: stats.bogeys, count: stats.count };
-    if (avg < easiestHole.avg) easiestHole = { hole, avg, birdies: stats.birdies, count: stats.count };
   }
 
   // Tipping stats
   const totalPicks = challengers.length * 10;
-  let picksInTop10 = 0;
-  let picksExact = 0;
+  let picksInTop10 = 0, picksExact = 0;
   for (const res of results) {
     for (const d of res.details) {
       if (d.leaderboardPos !== null && d.leaderboardPos <= 10) picksInTop10++;
@@ -704,57 +696,119 @@ function renderTournamentStats(leaderboard, challengers, results) {
     }
   }
 
-  const birdieRate = totalHoles > 0 ? (totalBirdies / totalHoles * 100).toFixed(1) : '0';
-  const bogeyRate = totalHoles > 0 ? (totalBogeys / totalHoles * 100).toFixed(1) : '0';
+  // === BUILD HOLE DIFFICULTY CHART ===
+  let holeBarsHtml = '';
+  const maxAvg = Math.max(...Object.values(holeStats).map(s => s.count >= 3 ? Math.abs(s.total / s.count) : 0), 0.5);
+
+  for (let h = 1; h <= 18; h++) {
+    const s = holeStats[h];
+    if (!s || s.count < 3) {
+      holeBarsHtml += `<div class="hbar-col"><div class="hbar-bar-wrap"><div class="hbar-bar" style="height:0"></div></div><div class="hbar-label">${h}</div></div>`;
+      continue;
+    }
+    const avg = s.total / s.count;
+    const pct = Math.min(Math.abs(avg) / maxAvg * 100, 100);
+    const isHard = avg > 0;
+    const color = isHard ? '#dc2626' : '#16a34a';
+    const tooltip = `Hull ${h}: ${avg > 0 ? '+' : ''}${avg.toFixed(2)} | ${s.birdies} birdies, ${s.bogeys} bogeys`;
+
+    holeBarsHtml += `
+      <div class="hbar-col" title="${tooltip}">
+        <div class="hbar-val" style="color:${color}">${avg > 0 ? '+' : ''}${avg.toFixed(1)}</div>
+        <div class="hbar-bar-wrap ${isHard ? 'hard' : 'easy'}">
+          <div class="hbar-bar" style="height:${pct}%;background:${color}"></div>
+        </div>
+        <div class="hbar-label">${h}</div>
+        <div class="hbar-par">${AUGUSTA_PAR[h-1]}</div>
+      </div>`;
+  }
+
+  // === SCORE TYPE DONUT (birdies/pars/bogeys) ===
+  const total = totalEagles + totalBirdies + totalPars + totalBogeys + totalDblBogeys;
+  const segments = [
+    { label: 'Eagle', count: totalEagles, color: '#d97706' },
+    { label: 'Birdie', count: totalBirdies, color: '#16a34a' },
+    { label: 'Par', count: totalPars, color: '#6b7280' },
+    { label: 'Bogey', count: totalBogeys, color: '#2563eb' },
+    { label: 'Dbl+', count: totalDblBogeys, color: '#1e3a5f' },
+  ];
+  let donutSegments = '';
+  let cumPct = 0;
+  for (const seg of segments) {
+    if (seg.count === 0) continue;
+    const pct = seg.count / total * 100;
+    donutSegments += `<circle cx="50" cy="50" r="40" fill="none" stroke="${seg.color}" stroke-width="16"
+      stroke-dasharray="${pct * 2.51} ${251 - pct * 2.51}"
+      stroke-dashoffset="${-cumPct * 2.51}" />`;
+    cumPct += pct;
+  }
+
+  let donutLegend = segments.filter(s => s.count > 0).map(s =>
+    `<span class="donut-legend-item"><span class="donut-dot" style="background:${s.color}"></span>${s.label} ${s.count}</span>`
+  ).join('');
+
+  // === SCORE DISTRIBUTION CHART ===
+  const sortedScores = Object.entries(scoreDistribution)
+    .map(([score, count]) => ({ score, count, num: parseScoreToPar(score) }))
+    .sort((a, b) => a.num - b.num);
+  const maxCount = Math.max(...sortedScores.map(s => s.count), 1);
+
+  let distBarsHtml = sortedScores.map(s => {
+    const pct = s.count / maxCount * 100;
+    const color = s.num < 0 ? '#dc2626' : s.num === 0 ? '#6b7280' : '#2563eb';
+    return `
+      <div class="dist-col" title="${s.score}: ${s.count} spillere">
+        <div class="dist-count">${s.count}</div>
+        <div class="dist-bar" style="height:${pct}%;background:${color}"></div>
+        <div class="dist-label">${s.score}</div>
+      </div>`;
+  }).join('');
+
+  // === KEY NUMBERS ROW ===
+  const leader = leaderboard[0];
+  const keyNumbers = `
+    <div class="key-numbers">
+      <div class="key-num">
+        <span class="key-val">${leader ? esc(leader.name) : '-'}</span>
+        <span class="key-label">Leder (${leader?.totalScore || '-'})</span>
+      </div>
+      ${lowestRound.score < 999 ? `<div class="key-num">
+        <span class="key-val">${lowestRound.score}</span>
+        <span class="key-label">Laveste runde — ${esc(lowestRound.player)}</span>
+      </div>` : ''}
+      ${mostBirdiesPlayer.count > 0 ? `<div class="key-num">
+        <span class="key-val">${mostBirdiesPlayer.count} birdies</span>
+        <span class="key-label">${esc(mostBirdiesPlayer.player)}</span>
+      </div>` : ''}
+      <div class="key-num">
+        <span class="key-val">${picksInTop10}/${totalPicks}</span>
+        <span class="key-label">Tips i topp 10</span>
+      </div>
+      <div class="key-num">
+        <span class="key-val">${picksExact}</span>
+        <span class="key-label">Eksakte treff</span>
+      </div>
+    </div>`;
 
   container.innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-card stat-highlight">
-        <div class="stat-value">${leaderboard[0] ? esc(leaderboard[0].name) : '-'}</div>
-        <div class="stat-label">Leder (${leaderboard[0]?.totalScore || '-'})</div>
+    ${keyNumbers}
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Hull-vanskelighetsgrad (vs. par)</div>
+        <div class="hbar-chart">${holeBarsHtml}</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${totalBirdies}</div>
-        <div class="stat-label">Birdies (${birdieRate}%)</div>
+      <div class="chart-card chart-small">
+        <div class="chart-title">Score-typer</div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 100 100" class="donut-svg">${donutSegments}</svg>
+          <div class="donut-center">${totalHoles}<br><small>hull</small></div>
+        </div>
+        <div class="donut-legend">${donutLegend}</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${totalEagles}</div>
-        <div class="stat-label">Eagles</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${totalBogeys + totalDblBogeys}</div>
-        <div class="stat-label">Bogeys+ (${bogeyRate}%)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${totalHoles}</div>
-        <div class="stat-label">Hull spilt</div>
-      </div>
-      <div class="stat-card stat-danger">
-        <div class="stat-value">Hull ${hardestHole.hole}</div>
-        <div class="stat-label">Vanskeligst (+${hardestHole.avg?.toFixed(2) || '?'})</div>
-      </div>
-      <div class="stat-card stat-success">
-        <div class="stat-value">Hull ${easiestHole.hole}</div>
-        <div class="stat-label">Enklest (${easiestHole.avg?.toFixed(2) || '?'})</div>
-      </div>
-      ${lowestRound.score < 999 ? `
-      <div class="stat-card">
-        <div class="stat-value">${lowestRound.score}</div>
-        <div class="stat-label">Laveste runde (${esc(lowestRound.player)})</div>
-      </div>` : ''}
-      ${mostBirdies.count > 0 ? `
-      <div class="stat-card">
-        <div class="stat-value">${mostBirdies.count}</div>
-        <div class="stat-label">Flest birdies (${esc(mostBirdies.player)})</div>
-      </div>` : ''}
-      <div class="stat-card stat-tipping">
-        <div class="stat-value">${picksInTop10} / ${totalPicks}</div>
-        <div class="stat-label">Tips i topp 10</div>
-      </div>
-      <div class="stat-card stat-tipping">
-        <div class="stat-value">${picksExact}</div>
-        <div class="stat-label">Eksakte plasseringer</div>
-      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Score-fordeling i feltet</div>
+      <div class="dist-chart">${distBarsHtml}</div>
     </div>`;
 }
 
