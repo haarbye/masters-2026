@@ -696,30 +696,33 @@ function renderTournamentStats(leaderboard, challengers, results) {
     }
   }
 
-  // === BUILD HOLE DIFFICULTY CHART ===
+  // === BUILD HOLE DIFFICULTY CHART (diverging: hard up, easy down) ===
   let holeBarsHtml = '';
-  const maxAvg = Math.max(...Object.values(holeStats).map(s => s.count >= 3 ? Math.abs(s.total / s.count) : 0), 0.5);
+  const maxAvg = Math.max(...Object.values(holeStats).map(s => s.count >= 3 ? Math.abs(s.total / s.count) : 0), 0.3);
+  const MAX_BAR_H = 60; // px
 
   for (let h = 1; h <= 18; h++) {
     const s = holeStats[h];
     if (!s || s.count < 3) {
-      holeBarsHtml += `<div class="hbar-col"><div class="hbar-bar-wrap"><div class="hbar-bar" style="height:0"></div></div><div class="hbar-label">${h}</div></div>`;
+      holeBarsHtml += `<div class="hbar-col"><div class="hbar-top"></div><div class="hbar-mid"></div><div class="hbar-bottom"></div><div class="hbar-info"><div class="hbar-label">${h}</div><div class="hbar-par">${AUGUSTA_PAR[h-1]}</div></div></div>`;
       continue;
     }
     const avg = s.total / s.count;
-    const pct = Math.min(Math.abs(avg) / maxAvg * 100, 100);
+    const barH = Math.max(Math.round(Math.abs(avg) / maxAvg * MAX_BAR_H), 3);
     const isHard = avg > 0;
     const color = isHard ? '#dc2626' : '#16a34a';
-    const tooltip = `Hull ${h}: ${avg > 0 ? '+' : ''}${avg.toFixed(2)} | ${s.birdies} birdies, ${s.bogeys} bogeys`;
+    const valColor = isHard ? '#dc2626' : '#16a34a';
+    const tooltip = `Hull ${h} (par ${AUGUSTA_PAR[h-1]}): ${avg > 0 ? '+' : ''}${avg.toFixed(2)} vs par\n${s.birdies} birdies, ${s.bogeys} bogeys`;
+
+    const upBar = isHard ? `<div class="hbar-bar up" style="height:${barH}px;background:${color}"></div><div class="hbar-val" style="color:${valColor}">${avg > 0 ? '+' : ''}${avg.toFixed(1)}</div>` : '';
+    const downBar = !isHard ? `<div class="hbar-val" style="color:${valColor}">${avg.toFixed(1)}</div><div class="hbar-bar down" style="height:${barH}px;background:${color}"></div>` : '';
 
     holeBarsHtml += `
       <div class="hbar-col" title="${tooltip}">
-        <div class="hbar-val" style="color:${color}">${avg > 0 ? '+' : ''}${avg.toFixed(1)}</div>
-        <div class="hbar-bar-wrap ${isHard ? 'hard' : 'easy'}">
-          <div class="hbar-bar" style="height:${pct}%;background:${color}"></div>
-        </div>
-        <div class="hbar-label">${h}</div>
-        <div class="hbar-par">${AUGUSTA_PAR[h-1]}</div>
+        <div class="hbar-top">${upBar}</div>
+        <div class="hbar-mid"></div>
+        <div class="hbar-bottom">${downBar}</div>
+        <div class="hbar-info"><div class="hbar-label">${h}</div><div class="hbar-par">${AUGUSTA_PAR[h-1]}</div></div>
       </div>`;
   }
 

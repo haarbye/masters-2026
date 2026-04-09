@@ -475,12 +475,11 @@
       margin-bottom: 12px;
     }
 
-    /* Hole difficulty bar chart */
+    /* Hole difficulty bar chart — diverging (hard up, easy down) */
     .hbar-chart {
       display: flex;
       gap: 2px;
-      align-items: flex-end;
-      height: 140px;
+      padding: 0 4px;
     }
 
     .hbar-col {
@@ -492,24 +491,47 @@
       cursor: default;
     }
 
-    .hbar-val { font-size: 9px; font-weight: 700; margin-bottom: 2px; }
+    .hbar-val { font-size: 9px; font-weight: 700; }
 
-    .hbar-bar-wrap {
+    .hbar-top {
+      height: 70px;
       width: 100%;
-      height: 80px;
       display: flex;
-      align-items: flex-end;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .hbar-bottom {
+      height: 70px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
 
     .hbar-bar {
-      width: 70%;
-      min-height: 2px;
-      border-radius: 2px 2px 0 0;
+      width: 65%;
+      min-height: 0;
       transition: height 0.6s ease;
     }
 
-    .hbar-label { font-size: 10px; font-weight: 700; color: var(--text); margin-top: 4px; }
+    .hbar-bar.up { border-radius: 3px 3px 0 0; }
+    .hbar-bar.down { border-radius: 0 0 3px 3px; }
+
+    .hbar-mid {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .hbar-info {
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .hbar-label { font-size: 10px; font-weight: 700; color: var(--text); }
     .hbar-par { font-size: 9px; color: var(--text-muted); }
 
     /* Donut chart */
