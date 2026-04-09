@@ -479,6 +479,182 @@ function renderRanking(challengers, results) {
   container.innerHTML = html;
 }
 
+// ============================================================
+// SCORE HISTORY + CHART
+// ============================================================
+
+const SCORE_HISTORY_KEY = 'masters2026_score_history';
+let scoreHistory = []; // [{time, scores: {name: pts, ...}}]
+
+function loadScoreHistory() {
+  try {
+    const raw = localStorage.getItem(SCORE_HISTORY_KEY);
+    if (raw) scoreHistory = JSON.parse(raw);
+  } catch { scoreHistory = []; }
+}
+
+function saveScoreHistory() {
+  try {
+    // Keep max 500 entries (~8 hours at 1/min)
+    if (scoreHistory.length > 500) scoreHistory = scoreHistory.slice(-500);
+    localStorage.setItem(SCORE_HISTORY_KEY, JSON.stringify(scoreHistory));
+  } catch {}
+}
+
+function recordScoreSnapshot(challengers, results) {
+  const now = Date.now();
+  const scores = {};
+  challengers.forEach((c, i) => { scores[c.name] = results[i].total; });
+
+  // Only record if scores changed or 5+ min since last entry
+  const last = scoreHistory[scoreHistory.length - 1];
+  if (last) {
+    const scoresChanged = JSON.stringify(last.scores) !== JSON.stringify(scores);
+    const timeDiff = now - last.time;
+    if (!scoresChanged && timeDiff < 300000) return; // skip if same scores and <5 min
+  }
+
+  scoreHistory.push({ time: now, scores });
+  saveScoreHistory();
+}
+
+function renderScoreChart() {
+  const canvas = document.getElementById('scoreChart');
+  const legendEl = document.getElementById('chartLegend');
+  if (!canvas || scoreHistory.length < 2) {
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth * 2;
+      canvas.height = canvas.offsetHeight * 2;
+      ctx.scale(2, 2);
+      ctx.fillStyle = '#5a6b5a';
+      ctx.font = '14px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Grafen vises etter hvert som poeng oppdateres...', canvas.offsetWidth / 2, canvas.offsetHeight / 2);
+    }
+    return;
+  }
+
+  const W = canvas.offsetWidth;
+  const H = canvas.offsetHeight;
+  canvas.width = W * 2;
+  canvas.height = H * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+
+  const PAD = { top: 20, right: 20, bottom: 36, left: 40 };
+  const plotW = W - PAD.left - PAD.right;
+  const plotH = H - PAD.top - PAD.bottom;
+
+  // Get all challenger names from history
+  const names = [...new Set(scoreHistory.flatMap(s => Object.keys(s.scores)))];
+  const allTimes = scoreHistory.map(s => s.time);
+  const minTime = allTimes[0];
+  const maxTime = allTimes[allTimes.length - 1];
+  const timeRange = Math.max(maxTime - minTime, 1);
+
+  // Find score range
+  let minScore = Infinity, maxScore = -Infinity;
+  for (const s of scoreHistory) {
+    for (const v of Object.values(s.scores)) {
+      if (v < minScore) minScore = v;
+      if (v > maxScore) maxScore = v;
+    }
+  }
+  if (minScore === maxScore) { minScore -= 1; maxScore += 1; }
+  const scoreRange = maxScore - minScore || 1;
+  const scorePad = scoreRange * 0.1;
+
+  function tx(time) { return PAD.left + ((time - minTime) / timeRange) * plotW; }
+  function ty(score) { return PAD.top + plotH - ((score - minScore + scorePad) / (scoreRange + scorePad * 2)) * plotH; }
+
+  // Clear
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = '#e8dece';
+  ctx.lineWidth = 0.5;
+  const gridSteps = 5;
+  for (let i = 0; i <= gridSteps; i++) {
+    const y = PAD.top + (plotH / gridSteps) * i;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
+    // Score label
+    const scoreVal = Math.round(maxScore + scorePad - ((scoreRange + scorePad * 2) / gridSteps) * i);
+    ctx.fillStyle = '#5a6b5a';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(scoreVal + 'p', PAD.left - 6, y + 3);
+  }
+
+  // Time labels
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#5a6b5a';
+  ctx.font = '10px Inter, sans-serif';
+  const timeSteps = Math.min(6, scoreHistory.length);
+  for (let i = 0; i < timeSteps; i++) {
+    const idx = Math.round((scoreHistory.length - 1) * i / (timeSteps - 1));
+    const t = scoreHistory[idx].time;
+    const date = new Date(t);
+    const label = date.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+    ctx.fillText(label, tx(t), H - PAD.bottom + 14);
+  }
+
+  // Draw lines per challenger (smooth bezier curves)
+  names.forEach((name, ni) => {
+    const color = getColor(lastChallengers.findIndex(c => c.name === name));
+    const points = [];
+
+    for (const s of scoreHistory) {
+      if (s.scores[name] !== undefined) {
+        points.push({ x: tx(s.time), y: ty(s.scores[name]) });
+      }
+    }
+
+    if (points.length < 2) return;
+
+    ctx.strokeStyle = color.dot;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+
+    // Smooth bezier curve
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const cpx = (prev.x + curr.x) / 2;
+      ctx.bezierCurveTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
+    }
+
+    ctx.stroke();
+
+    // Draw endpoint dot
+    const last = points[points.length - 1];
+    ctx.fillStyle = color.dot;
+    ctx.beginPath();
+    ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Label at endpoint
+    ctx.fillStyle = color.dot;
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(name, last.x + 8, last.y + 4);
+  });
+
+  // Legend
+  if (legendEl) {
+    legendEl.innerHTML = names.map(name => {
+      const ci = lastChallengers.findIndex(c => c.name === name);
+      const color = getColor(ci >= 0 ? ci : 0);
+      return `<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${color.dot}"></span>${esc(name)}</span>`;
+    }).join('');
+  }
+}
+
+loadScoreHistory();
+
 function renderRoundBreakdown(challengers, resultsByRound, activeRound) {
   const container = document.getElementById('roundBreakdown');
   let html = '';
@@ -1389,6 +1565,9 @@ async function updateDashboard() {
       total: cum.total, // cumulative total across all rounds
     }));
 
+    // Record score snapshot for chart
+    recordScoreSnapshot(challengers, finalResults);
+
     // Render everything
     renderStatus(tournamentStatus, currentRound);
     renderTicker(leaderboardData, challengers);
@@ -1396,6 +1575,11 @@ async function updateDashboard() {
     renderRoundBreakdown(challengers, resultsByRound, currentRound);
     renderPickCards(challengers, finalResults);
     renderLeaderboard(leaderboardData, challengers);
+
+    // Update chart if visible
+    if (document.getElementById('chartView')?.classList.contains('active')) {
+      renderScoreChart();
+    }
 
     document.getElementById('lastUpdate').textContent =
       new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
