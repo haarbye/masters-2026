@@ -1456,7 +1456,7 @@ function renderRegistrationForm() {
           <input type="text" id="regName" placeholder="Ditt navn" class="reg-input" maxlength="20" />
         </div>
         <div style="background:#fef2f2;border:1px solid #dc2626;border-radius:2px;padding:10px 14px;margin:0 0 12px;font-size:12px;color:#991b1b;line-height:1.4">
-          <strong>OBS!</strong> Sen-registrering gir ingen poeng for torsdag. Du har sett resultatene og MÅ SPILLE MED HJERTE — ikke bare velge spillerne som leder!<br><strong>Maks 4 av dine 10 picks kan gi topp-10 poeng per runde.</strong>
+          <strong>OBS!</strong> Sen-registrering gir ingen poeng for torsdag. Du har sett resultatene og MÅ SPILLE MED HJERTE — ikke bare velge spillerne som leder!<br><strong>Du kan maks velge 4 spillere som er i nåværende topp 10.</strong>
         </div>
         <div class="reg-picks-grid" id="regPicksGrid"></div>
         <div class="reg-actions">
