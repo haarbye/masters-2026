@@ -1415,12 +1415,12 @@ function renderRegistrationForm() {
         <h3>Bli med i konkurransen</h3>
         <span class="reg-deadline">Stenger om ${hours}t ${mins}min</span>
       </div>
-      <div style="background:#fef2f2;border:1px solid #dc2626;border-radius:4px;padding:10px 14px;margin:0 16px 12px;font-size:12px;color:#991b1b;line-height:1.4">
-        <strong>OBS!</strong> Sen-registrering gir ingen poeng for torsdag. Du har sett resultatene og MÅ SPILLE MED HJERTE — ikke bare velge spillerne som leder!
-      </div>
       <div class="reg-form">
         <div class="reg-name-row">
           <input type="text" id="regName" placeholder="Ditt navn" class="reg-input" maxlength="20" />
+        </div>
+        <div style="background:#fef2f2;border:1px solid #dc2626;border-radius:4px;padding:10px 14px;margin:0 0 12px;font-size:12px;color:#991b1b;line-height:1.4">
+          <strong>OBS!</strong> Sen-registrering gir ingen poeng for torsdag. Du har sett resultatene og MÅ SPILLE MED HJERTE — ikke bare velge spillerne som leder!
         </div>
         <div class="reg-picks-grid" id="regPicksGrid"></div>
         <div class="reg-actions">
