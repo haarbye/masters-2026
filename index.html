@@ -64,6 +64,42 @@
     .header h1 { display: none; }
     .header .subtitle { display: none; }
 
+    /* Face overlays on banner */
+    .face-overlay {
+      position: absolute;
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 2;
+      opacity: 0.88;
+      border: 2px solid rgba(255,255,255,0.5);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+    .face-1 { width: 70px; height: 70px; top: 15px; right: 12%; transform: rotate(12deg); }
+    .face-2 { width: 55px; height: 55px; top: 60px; right: 5%; transform: rotate(-8deg); }
+    .face-3 { width: 48px; height: 48px; bottom: 30px; right: 22%; transform: rotate(20deg); }
+    .face-4 { width: 62px; height: 62px; top: 10px; right: 30%; transform: rotate(-15deg); }
+    .face-5 { width: 44px; height: 44px; bottom: 35px; right: 8%; transform: rotate(6deg); }
+    .face-6 { width: 52px; height: 52px; top: 40px; right: 38%; transform: rotate(-22deg); }
+
+    @media (min-width: 768px) {
+      .face-1 { width: 90px; height: 90px; top: 18px; right: 10%; }
+      .face-2 { width: 70px; height: 70px; top: 80px; right: 3%; }
+      .face-3 { width: 60px; height: 60px; bottom: 25px; right: 20%; }
+      .face-4 { width: 80px; height: 80px; top: 12px; right: 28%; }
+      .face-5 { width: 55px; height: 55px; bottom: 30px; right: 6%; }
+      .face-6 { width: 65px; height: 65px; top: 50px; right: 36%; }
+    }
+
+    @media (min-width: 1200px) {
+      .face-1 { width: 110px; height: 110px; top: 20px; right: 8%; }
+      .face-2 { width: 85px; height: 85px; top: 100px; right: 2%; }
+      .face-3 { width: 72px; height: 72px; bottom: 20px; right: 18%; }
+      .face-4 { width: 95px; height: 95px; top: 10px; right: 26%; }
+      .face-5 { width: 65px; height: 65px; bottom: 25px; right: 5%; }
+      .face-6 { width: 78px; height: 78px; top: 55px; right: 34%; }
+    }
+
     .tournament-info {
       display: flex;
       justify-content: center;
@@ -2141,6 +2177,13 @@
 <body>
   <div class="header">
     <img src="masters-header-hd.webp" alt="Masters" class="header-banner">
+    <!-- Face overlays -->
+    <img src="face1.png" alt="" class="face-overlay face-1">
+    <img src="face2.png" alt="" class="face-overlay face-2">
+    <img src="face1.png" alt="" class="face-overlay face-3">
+    <img src="face2.png" alt="" class="face-overlay face-4">
+    <img src="face1.png" alt="" class="face-overlay face-5">
+    <img src="face2.png" alt="" class="face-overlay face-6">
     <div class="tournament-info">
       <span>Augusta National Golf Club</span>
       <span>|</span>
