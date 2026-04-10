@@ -1910,6 +1910,7 @@
       flex-direction: column;
       overflow: hidden;
       transition: max-height 0.3s ease, opacity 0.2s ease;
+      position: relative;
     }
 
     .chat-card .chat-body { max-height: 500px; opacity: 1; }
@@ -2047,6 +2048,77 @@
       font-size: 12px;
       padding: 30px 10px;
     }
+
+    .chat-msg-count {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0.6;
+    }
+
+    .chat-day-sep {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: capitalize;
+      padding: 8px 0 4px;
+      position: relative;
+    }
+    .chat-day-sep::before, .chat-day-sep::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 25%;
+      height: 1px;
+      background: var(--border-light);
+    }
+    .chat-day-sep::before { left: 5%; }
+    .chat-day-sep::after { right: 5%; }
+
+    .chat-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .chat-name-wrap.locked .chat-name-input {
+      background: #f0ebe0;
+      color: var(--text-muted);
+      border-color: transparent;
+      cursor: default;
+    }
+    .chat-name-change {
+      background: none;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+    .chat-name-change:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+
+    .chat-scroll-btn {
+      position: absolute;
+      bottom: 52px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--masters-green);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      z-index: 5;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      animation: fadeSlideIn 0.2s ease;
+    }
+    .chat-scroll-btn:hover { opacity: 0.85; }
   </style>
 </head>
 <body>

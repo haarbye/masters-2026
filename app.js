@@ -2084,14 +2084,17 @@ const CHAT_POLL_INTERVAL = 10000; // 10s
 let chatMessages = [];
 let chatLastId = 0;
 let chatMyName = localStorage.getItem('chatName') || '';
-let chatOpen = { chatMobile: false, chatDesktop: true }; // desktop open by default
+let chatNameLocked = !!localStorage.getItem('chatNameLocked'); // locked after first send
+let chatOpen = { chatMobile: false, chatDesktop: true };
 let chatUnread = 0;
 let chatSeenId = parseInt(localStorage.getItem('chatSeenId') || '0');
 
 function chatHtml(targetId) {
+  const lockedClass = chatNameLocked ? 'locked' : '';
+  const nameDisabled = chatNameLocked ? 'disabled' : '';
   return `
     <div class="chat-header" onclick="toggleChat('${targetId}')">
-      💬 Chat
+      💬 Chat <span class="chat-msg-count" id="chatCount-${targetId}"></span>
       <span class="chat-badge" id="chatBadge-${targetId}"></span>
       <span class="chat-toggle-icon" id="chatToggle-${targetId}">▼</span>
     </div>
@@ -2099,8 +2102,12 @@ function chatHtml(targetId) {
       <div class="chat-messages" id="chatMsgs-${targetId}">
         <div class="chat-empty">Ingen meldinger ennå — vær den første!</div>
       </div>
+      <div class="chat-scroll-btn" id="chatScrollBtn-${targetId}" style="display:none" onclick="chatScrollToBottom('${targetId}')">▼ Nye meldinger</div>
       <div class="chat-input-wrap">
-        <input type="text" class="chat-name-input" id="chatName-${targetId}" placeholder="Navn" maxlength="20" value="${esc(chatMyName)}">
+        <div class="chat-name-wrap ${lockedClass}" id="chatNameWrap-${targetId}">
+          <input type="text" class="chat-name-input" id="chatName-${targetId}" placeholder="Navn" maxlength="20" value="${esc(chatMyName)}" ${nameDisabled}>
+          ${chatNameLocked ? `<button class="chat-name-change" onclick="unlockChatName('${targetId}')" title="Bytt navn">✎</button>` : ''}
+        </div>
         <input type="text" class="chat-msg-input" id="chatInput-${targetId}" placeholder="Skriv en melding..." maxlength="500">
         <button class="chat-send-btn" id="chatSend-${targetId}">Send</button>
       </div>
@@ -2116,14 +2123,12 @@ function toggleChat(targetId) {
   if (chatOpen[targetId]) {
     container.classList.remove('chat-collapsed');
     if (icon) icon.textContent = '▲';
-    // Mark as read
     chatUnread = 0;
     if (chatMessages.length > 0) {
       chatSeenId = chatMessages[chatMessages.length - 1].id;
       localStorage.setItem('chatSeenId', chatSeenId);
     }
     updateChatBadges();
-    // Scroll to bottom
     const msgs = document.getElementById(`chatMsgs-${targetId}`);
     if (msgs) setTimeout(() => msgs.scrollTop = msgs.scrollHeight, 50);
   } else {
@@ -2136,11 +2141,50 @@ function updateChatBadges() {
   ['chatMobile', 'chatDesktop'].forEach(id => {
     const badge = document.getElementById(`chatBadge-${id}`);
     if (badge) badge.textContent = chatUnread > 0 ? chatUnread : '';
+    const count = document.getElementById(`chatCount-${id}`);
+    if (count) count.textContent = chatMessages.length > 0 ? `(${chatMessages.length})` : '';
   });
-  // Update page title
   document.title = chatUnread > 0
     ? `(${chatUnread}) The Masters 2026 — Tippekonkurranse`
     : 'The Masters 2026 — Tippekonkurranse';
+}
+
+function unlockChatName(targetId) {
+  if (!confirm('Er du sikker på at du vil bytte navn?')) return;
+  chatNameLocked = false;
+  localStorage.removeItem('chatNameLocked');
+  // Re-render chat UI
+  initChat();
+}
+
+function lockChatName() {
+  chatNameLocked = true;
+  localStorage.setItem('chatNameLocked', '1');
+  // Update all name inputs to locked state
+  ['chatMobile', 'chatDesktop'].forEach(id => {
+    const wrap = document.getElementById(`chatNameWrap-${id}`);
+    const input = document.getElementById(`chatName-${id}`);
+    if (wrap && input) {
+      wrap.classList.add('locked');
+      input.disabled = true;
+      // Add change button if not present
+      if (!wrap.querySelector('.chat-name-change')) {
+        const btn = document.createElement('button');
+        btn.className = 'chat-name-change';
+        btn.title = 'Bytt navn';
+        btn.textContent = '✎';
+        btn.onclick = () => unlockChatName(id);
+        wrap.appendChild(btn);
+      }
+    }
+  });
+}
+
+function chatScrollToBottom(targetId) {
+  const el = document.getElementById(`chatMsgs-${targetId}`);
+  if (el) el.scrollTop = el.scrollHeight;
+  const btn = document.getElementById(`chatScrollBtn-${targetId}`);
+  if (btn) btn.style.display = 'none';
 }
 
 function initChat() {
@@ -2149,33 +2193,39 @@ function initChat() {
   if (mobile) mobile.innerHTML = chatHtml('chatMobile');
   if (desktop) desktop.innerHTML = chatHtml('chatDesktop');
 
-  // Set initial collapsed state
   if (mobile) { mobile.classList.add('chat-collapsed'); chatOpen.chatMobile = false; }
-  // Desktop starts open
   if (desktop) { chatOpen.chatDesktop = true; }
 
-  // Wire up both instances
   ['chatMobile', 'chatDesktop'].forEach(id => {
     const sendBtn = document.getElementById(`chatSend-${id}`);
     const input = document.getElementById(`chatInput-${id}`);
     const nameInput = document.getElementById(`chatName-${id}`);
+    const msgsEl = document.getElementById(`chatMsgs-${id}`);
 
     if (!sendBtn) return;
 
     sendBtn.addEventListener('click', () => sendChatMessage(id));
     input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMessage(id); });
 
-    // Sync name between both inputs
+    // Sync name between both inputs (only when not locked)
     nameInput?.addEventListener('input', () => {
+      if (chatNameLocked) return;
       chatMyName = nameInput.value.trim();
       localStorage.setItem('chatName', chatMyName);
       const otherId = id === 'chatMobile' ? 'chatDesktop' : 'chatMobile';
       const other = document.getElementById(`chatName-${otherId}`);
       if (other) other.value = chatMyName;
     });
+
+    // Scroll detection for "new messages" button
+    msgsEl?.addEventListener('scroll', () => {
+      const btn = document.getElementById(`chatScrollBtn-${id}`);
+      if (!btn || !msgsEl) return;
+      const atBottom = msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 60;
+      btn.style.display = atBottom ? 'none' : 'block';
+    });
   });
 
-  // Start polling
   fetchChatMessages();
   setInterval(fetchChatMessages, CHAT_POLL_INTERVAL);
 }
@@ -2195,12 +2245,9 @@ async function fetchChatMessages() {
     chatMessages = msgs;
     if (msgs.length > 0) chatLastId = msgs[msgs.length - 1].id;
 
-    // Count unread (messages after last seen, not from self)
     const unseenMsgs = msgs.filter(m => m.id > chatSeenId && m.name.toLowerCase() !== chatMyName.toLowerCase());
-    // Only show unread if chat is collapsed
     const anyOpen = Object.values(chatOpen).some(v => v);
     if (anyOpen && !isFirstLoad) {
-      // Chat is open — mark as read
       chatUnread = 0;
       if (msgs.length > 0) {
         chatSeenId = msgs[msgs.length - 1].id;
@@ -2210,15 +2257,16 @@ async function fetchChatMessages() {
       chatUnread = unseenMsgs.length;
     }
     updateChatBadges();
-
     renderChatMessages();
 
-    // Auto-scroll if new messages and chat is open
     if (newMsgs.length > 0) {
       ['chatMobile', 'chatDesktop'].forEach(id => {
         if (chatOpen[id]) {
           const el = document.getElementById(`chatMsgs-${id}`);
-          if (el) el.scrollTop = el.scrollHeight;
+          if (el) {
+            const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+            if (atBottom) el.scrollTop = el.scrollHeight;
+          }
         }
       });
     }
@@ -2226,20 +2274,38 @@ async function fetchChatMessages() {
 }
 
 function renderChatMessages() {
-  const html = chatMessages.length === 0
-    ? '<div class="chat-empty">Ingen meldinger ennå — vær den første!</div>'
-    : chatMessages.map(m => {
-      const isOwn = m.name.toLowerCase() === chatMyName.toLowerCase();
-      const time = new Date(m.created_at).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
-      const day = new Date(m.created_at).toLocaleDateString('no-NO', { weekday: 'short' });
-      return `<div class="chat-msg ${isOwn ? 'own' : ''}">
-        <div class="chat-msg-header">
-          <span class="chat-msg-name">${esc(m.name)}</span>
-          <span class="chat-msg-time">${day} ${time}</span>
-        </div>
-        <div class="chat-msg-text">${esc(m.message)}</div>
-      </div>`;
-    }).join('');
+  if (chatMessages.length === 0) {
+    const empty = '<div class="chat-empty">Ingen meldinger ennå — vær den første!</div>';
+    ['chatMobile', 'chatDesktop'].forEach(id => {
+      const el = document.getElementById(`chatMsgs-${id}`);
+      if (el) el.innerHTML = empty;
+    });
+    return;
+  }
+
+  let html = '';
+  let lastDay = '';
+
+  for (const m of chatMessages) {
+    const d = new Date(m.created_at);
+    const dayStr = d.toLocaleDateString('no-NO', { weekday: 'long', day: 'numeric', month: 'short' });
+    const time = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+    const isOwn = m.name.toLowerCase() === chatMyName.toLowerCase();
+
+    // Day separator
+    if (dayStr !== lastDay) {
+      html += `<div class="chat-day-sep">${dayStr}</div>`;
+      lastDay = dayStr;
+    }
+
+    html += `<div class="chat-msg ${isOwn ? 'own' : ''}">
+      <div class="chat-msg-header">
+        <span class="chat-msg-name">${esc(m.name)}</span>
+        <span class="chat-msg-time">${time}</span>
+      </div>
+      <div class="chat-msg-text">${esc(m.message)}</div>
+    </div>`;
+  }
 
   ['chatMobile', 'chatDesktop'].forEach(id => {
     const el = document.getElementById(`chatMsgs-${id}`);
@@ -2255,11 +2321,26 @@ async function sendChatMessage(sourceId) {
   const name = (nameInput?.value || '').trim();
   const message = (msgInput?.value || '').trim();
 
-  if (!name || name.length < 2) { nameInput?.focus(); return; }
+  if (!name || name.length < 2) {
+    nameInput?.focus();
+    return;
+  }
   if (!message) { msgInput?.focus(); return; }
+
+  // Validate name matches a challenger (case-insensitive)
+  const challengers = lastChallengers.map(c => c.name.toLowerCase());
+  if (challengers.length > 0 && !challengers.includes(name.toLowerCase())) {
+    const suggestion = lastChallengers.find(c => c.name.toLowerCase().startsWith(name.toLowerCase()));
+    alert(`Navnet "${name}" finnes ikke blant deltakerne.${suggestion ? ` Mente du "${suggestion.name}"?` : ' Skriv inn navnet du registrerte deg med.'}`);
+    nameInput?.focus();
+    return;
+  }
 
   chatMyName = name;
   localStorage.setItem('chatName', chatMyName);
+
+  // Lock name after first successful send
+  if (!chatNameLocked) lockChatName();
 
   sendBtn.disabled = true;
   try {
@@ -2270,9 +2351,13 @@ async function sendChatMessage(sourceId) {
     });
 
     if (!resp.ok) throw new Error('Send failed');
-
     msgInput.value = '';
     await fetchChatMessages();
+    // Scroll to bottom after sending
+    ['chatMobile', 'chatDesktop'].forEach(id => {
+      const el = document.getElementById(`chatMsgs-${id}`);
+      if (el) el.scrollTop = el.scrollHeight;
+    });
   } catch (err) {
     console.error('Chat send error:', err);
   } finally {
