@@ -1324,28 +1324,25 @@
       .pick-pos { font-size: 11px; padding: 2px 6px; min-width: 34px; }
       .pick-pts { font-size: 12px; min-width: 28px; }
 
-      /* Leaderboard */
+      /* Leaderboard — mobile: Pos | Player | Total only */
       .leaderboard-section { margin-bottom: 16px; }
-      /* Grid: Pos | Player | MobileStatus | R1 R2 R3 R4(hidden) | Total | Thru(hidden) */
-      .lb-row { grid-template-columns: 28px 1fr auto 56px; padding: 8px 8px; font-size: 12px; }
-      .lb-header { grid-template-columns: 28px 1fr 56px; padding: 8px 8px; font-size: 12px; }
-      /* Hide R1-R3 (children 4-6), Thru (child 9) on mobile */
-      .lb-header > :nth-child(3), .lb-header > :nth-child(4), .lb-header > :nth-child(5), .lb-header > :nth-child(8),
-      .lb-row > :nth-child(4), .lb-row > :nth-child(5), .lb-row > :nth-child(6), .lb-row > :nth-child(9) { display: none; }
-      /* Show mobile status cell */
-      .lb-row .lb-status-mobile { display: flex !important; align-items: center; justify-content: flex-end; }
+      .lb-row { grid-template-columns: 32px 1fr 54px; padding: 8px 10px; font-size: 12px; }
+      .lb-header { grid-template-columns: 32px 1fr 54px; padding: 8px 10px; font-size: 12px; }
+      /* Hide: header R1-R4+Thru (children 3-6,8), row: mobileStatus(3), R1-R4(4-7), Thru(9) */
+      .lb-header > :nth-child(3), .lb-header > :nth-child(4), .lb-header > :nth-child(5), .lb-header > :nth-child(6), .lb-header > :nth-child(8),
+      .lb-row > :nth-child(3), .lb-row > :nth-child(4), .lb-row > :nth-child(5), .lb-row > :nth-child(6), .lb-row > :nth-child(7), .lb-row > :nth-child(9) { display: none !important; }
       .lb-player { gap: 5px; flex-wrap: wrap; }
-      .lb-player .name { font-size: 12px; }
+      .lb-player .name { font-size: 13px; }
       .lb-player .flag { font-size: 14px; }
-      .lb-headshot { width: 32px; height: 32px; }
+      .lb-headshot { width: 34px; height: 34px; }
       .lb-pos { font-size: 12px; }
-      .lb-total { font-size: 14px; line-height: 1.3; }
+      .lb-total { font-size: 15px; font-weight: 800; line-height: 1.3; }
       .lb-thru-inline { display: block; font-size: 10px; font-weight: 600; color: var(--text-muted); }
       /* Dots on own line under name */
-      .lb-player .picked-by { width: 100%; margin-left: 0; margin-top: -2px; }
-      /* Hide inline status from player cell on mobile */
+      .lb-player .picked-by { width: 100%; margin-left: 0; margin-top: -1px; }
+      /* Tee time / LIVE inline after name on mobile */
       .lb-player .lb-live-inline,
-      .lb-player .lb-tee-time { display: none; }
+      .lb-player .lb-tee-time { font-size: 9px; margin-left: 4px; }
 
       /* Scorecard */
       .lb-scorecard { padding: 12px 10px 16px; }
@@ -1391,10 +1388,9 @@
       .rank-pos { font-size: 18px; }
       .round-breakdown { grid-template-columns: repeat(2, 1fr); }
       .scoring-grid { grid-template-columns: 1fr; }
-      .lb-row { grid-template-columns: 24px 1fr auto 46px; padding: 6px 6px; }
-      .lb-header { grid-template-columns: 24px 1fr 46px; padding: 6px 6px; }
-      .lb-headshot { width: 28px; height: 28px; }
-      .lb-player .name { font-size: 11px; }
+      .lb-row, .lb-header { grid-template-columns: 28px 1fr 50px; padding: 6px 6px; }
+      .lb-headshot { width: 30px; height: 30px; }
+      .lb-player .name { font-size: 12px; }
       .pick-columns { gap: 8px; }
     }
 
