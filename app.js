@@ -169,6 +169,9 @@ let currentRound = 1;
 let tournamentStatus = 'pre';
 let espnPlayerNames = [];
 let lastChallengers = []; // cached for sync access in click handlers
+let teeTimeData = {}; // { athleteId: { teeTime: 'ISO', startHole: 1 } }
+let lastEventId = '';
+let lastCompId = '';
 
 // --- HTML escaping (XSS protection) ---
 function esc(str) {
@@ -348,6 +351,10 @@ function parseESPNData(data) {
     const competition = event.competitions?.[0];
     if (!competition) return { leaderboard: result, round, status };
 
+    // Store IDs for tee time fetching
+    lastEventId = event.id || '';
+    lastCompId = competition.id || lastEventId;
+
     const stateStr = competition.status?.type?.state || 'pre';
     if (stateStr === 'in') status = 'in_progress';
     else if (stateStr === 'post') status = 'complete';
@@ -435,6 +442,51 @@ function parseESPNData(data) {
   } catch (err) { console.error('Parse error:', err); }
 
   return { leaderboard: result, round, status };
+}
+
+// --- Tee time fetching ---
+let teeTimeCacheExpiry = 0;
+
+async function fetchTeeTimes() {
+  if (!lastEventId || Date.now() < teeTimeCacheExpiry) return;
+  try {
+    const ids = leaderboardData.map(e => e.athleteId).filter(Boolean);
+    if (ids.length === 0) return;
+    const BATCH = 25;
+    const newData = {};
+    for (let i = 0; i < ids.length; i += BATCH) {
+      const batch = ids.slice(i, i + BATCH);
+      const results = await Promise.allSettled(batch.map(async id => {
+        const r = await fetch(`https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/${lastEventId}/competitions/${lastCompId}/competitors/${id}/status`);
+        if (!r.ok) return null;
+        const d = await r.json();
+        return { id, teeTime: d.teeTime || null, startHole: d.startHole || 1 };
+      }));
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value && r.value.teeTime) {
+          newData[r.value.id] = { teeTime: r.value.teeTime, startHole: r.value.startHole };
+        }
+      }
+    }
+    teeTimeData = newData;
+    teeTimeCacheExpiry = Date.now() + 5 * 60 * 1000; // 5 min cache
+  } catch (err) { console.error('Tee time fetch error:', err); }
+}
+
+function formatTeeTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Oslo' });
+}
+
+// --- Projected cut line (top 50 + ties at Masters) ---
+function getProjectedCutScore(leaderboard) {
+  const active = leaderboard.filter(e => !e.isCut && !e.isDQ);
+  if (active.length < 50) return null;
+  const sorted = [...active].sort((a, b) => a.position - b.position);
+  const cutPlayer = sorted[49]; // 50th player
+  if (!cutPlayer) return null;
+  return cutPlayer.totalScore;
 }
 
 // ============================================================
@@ -684,7 +736,8 @@ function renderScoreChart() {
   // Draw lines per challenger (smooth bezier curves)
   const endpoints = []; // collect for label de-overlap
   names.forEach((name, ni) => {
-    const color = getColor(lastChallengers.findIndex(c => c.name === name));
+    const ci = lastChallengers.findIndex(c => c.name === name);
+    const color = getColor(ci >= 0 ? ci : ni);
     const points = [];
 
     for (const s of scoreHistory) {
@@ -732,9 +785,9 @@ function renderScoreChart() {
   }
   for (const ep of endpoints) {
     ctx.fillStyle = ep.color;
-    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.font = 'bold 12px Inter, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(ep.name, ep.x + 8, ep.y + 4);
+    ctx.fillText(ep.name, ep.x + 10, ep.y + 4);
   }
 
   // Legend
@@ -1144,7 +1197,12 @@ function renderLeaderboard(leaderboard, challengers) {
     return lbSortDir === 'asc' ? va - vb : vb - va;
   });
 
+  // Projected cut line
+  const projectedCut = currentRound <= 2 ? getProjectedCutScore(leaderboard) : null;
+
   let html = '';
+  let cutLineInserted = false;
+
   for (const entry of shown) {
     const info = getPlayerInfo(entry.name);
     const flagEmoji = info.flag !== '🏳️' ? info.flag : getFlagEmoji(entry.countryAlt);
@@ -1167,6 +1225,16 @@ function renderLeaderboard(leaderboard, challengers) {
     if (s.startsWith('-') || s.startsWith('−')) scoreClass = 'under-par';
     else if (s.startsWith('+')) scoreClass = 'over-par';
 
+    // Insert projected cut line before first player below the cut
+    if (!cutLineInserted && projectedCut !== null && !entry.isCut && !entry.isDQ && lbSortField === 'position') {
+      const cutPar = parseScoreToPar(projectedCut);
+      const entryPar = parseScoreToPar(entry.totalScore);
+      if (entryPar > cutPar) {
+        html += `<div class="lb-cut-line"><span>✂ Projected cut: ${projectedCut}</span></div>`;
+        cutLineInserted = true;
+      }
+    }
+
     // Build scorecard HTML
     let scorecardHtml = '';
     if (isExpanded && entry.holeData) {
@@ -1174,6 +1242,10 @@ function renderLeaderboard(leaderboard, challengers) {
     }
 
     const isLive = entry.thru && entry.thru !== '-' && entry.thru !== 'F' && entry.thru !== '';
+
+    // Tee time for players not yet started
+    const tt = teeTimeData[entry.athleteId];
+    const teeTimeStr = (!isLive && entry.thru === '-' && tt) ? formatTeeTime(tt.teeTime) : '';
 
     html += `
       <div class="lb-entry ${highlight}">
@@ -1190,7 +1262,7 @@ function renderLeaderboard(leaderboard, challengers) {
           <div class="lb-round text-center">${entry.rounds[3] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[4] || '-'}</div>
           <div class="lb-total ${scoreClass} text-center">${entry.totalScore}${entry.thru && entry.thru !== '-' && entry.thru !== 'F' ? `<span class="lb-thru-inline">${entry.thru}</span>` : ''}</div>
-          <div class="lb-thru text-center">${entry.thru}</div>
+          <div class="lb-thru text-center">${entry.thru}${teeTimeStr ? `<div class="lb-tee-time">${teeTimeStr}</div>` : ''}</div>
         </div>
         ${isExpanded ? `<div class="lb-scorecard">${scorecardHtml}</div>` : ''}
       </div>`;
@@ -1780,6 +1852,9 @@ async function updateDashboard() {
     renderRoundBreakdown(challengers, resultsByRound, currentRound);
     renderPickCards(challengers, finalResults);
     renderLeaderboard(leaderboardData, challengers);
+
+    // Fetch tee times in background (non-blocking)
+    fetchTeeTimes().then(() => renderLeaderboard(leaderboardData, lastChallengers)).catch(() => {});
 
     // Update chart if visible
     if (document.getElementById('chartView')?.classList.contains('active')) {
