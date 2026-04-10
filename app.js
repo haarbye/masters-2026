@@ -306,6 +306,10 @@ function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
   // For completed rounds, use positions calculated from that round's cumulative scores
   const roundPositions = useRoundPositions ? getPositionsAfterRound(leaderboard, roundNum) : null;
 
+  // Projected cut for R2 — apply penalty to players below projected cut line
+  const projCut = (roundNum === 2 && !useRoundPositions) ? getProjectedCutScore(leaderboard) : null;
+  const projCutPar = projCut !== null ? parseScoreToPar(projCut) : null;
+
   for (let i = 0; i < picks.length; i++) {
     const match = findPlayerOnLeaderboard(picks[i], leaderboard);
     let pos = null;
@@ -324,6 +328,10 @@ function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
       isCut = match.isCut || false;
       const isDQ = match.isDQ || false;
 
+      // Check if player is below projected cut (R2 live only)
+      const playerPar = projCutPar !== null ? parseScoreToPar(match.totalScore) : null;
+      const isBelowProjectedCut = projCutPar !== null && playerPar !== null && playerPar > projCutPar;
+
       if (isSunday && isDQ) {
         // Søndag: DQ gir straff
         pts = CUT_PENALTY;
@@ -332,6 +340,11 @@ function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
         // R2–R3: CUT gir straff (ikke R1 — CUT skjer etter fredag)
         pts = CUT_PENALTY;
         cuts++;
+      } else if (!isSunday && isBelowProjectedCut && roundNum === 2) {
+        // R2 live: player below projected cut — show projected penalty
+        pts = CUT_PENALTY;
+        cuts++;
+        isCut = true; // mark as projected cut for display
       } else if (pos <= 10) {
         hits++;
         if (isSunday) {
@@ -1283,7 +1296,9 @@ let lbShowAll = false;
 
 function renderLeaderboard(leaderboard, challengers) {
   const container = document.getElementById('leaderboard');
-  let shown = lbShowAll ? leaderboard : leaderboard.slice(0, 50);
+  // Show enough players to include those below projected cut line
+  const defaultCount = Math.min(leaderboard.length, 60);
+  let shown = lbShowAll ? leaderboard : leaderboard.slice(0, defaultCount);
 
   if (shown.length === 0) {
     container.innerHTML = `<div class="loading"><div class="spinner"></div>Turneringen har ikke startet ennå...</div>`;
@@ -1401,10 +1416,10 @@ function renderLeaderboard(leaderboard, challengers) {
   }
 
   // Show all / show less button
-  if (!lbShowAll && leaderboard.length > 50) {
+  if (!lbShowAll && leaderboard.length > defaultCount) {
     html += `<div style="text-align:center;padding:12px"><button id="lbShowAllBtn" style="background:var(--masters-green);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Vis alle ${leaderboard.length} spillere</button></div>`;
-  } else if (lbShowAll && leaderboard.length > 50) {
-    html += `<div style="text-align:center;padding:12px"><button id="lbShowLessBtn" style="background:var(--text-muted);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Vis topp 50</button></div>`;
+  } else if (lbShowAll && leaderboard.length > defaultCount) {
+    html += `<div style="text-align:center;padding:12px"><button id="lbShowLessBtn" style="background:var(--text-muted);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Vis topp ${defaultCount}</button></div>`;
   }
 
   container.innerHTML = html;
