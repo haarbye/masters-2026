@@ -155,11 +155,11 @@ async function getAllChallengers() {
 
 // --- Scoring ---
 // Top-10 points per round: flat values, no multiplier
-const TOP10_PTS_PER_ROUND = { 1: 1, 2: 2, 3: 3, 4: 3 };
+const TOP10_PTS_PER_ROUND = { 1: 2, 2: 3, 3: 4, 4: 4 };
 const ROUND_NAMES = { 1: 'Torsdag', 2: 'Fredag', 3: 'Lørdag', 4: 'Søndag' };
 // Earliest tee times in Norwegian time (CEST, UTC+2). Augusta is EDT (UTC-4), so +6h.
 const ROUND_START_TIMES = { 1: '13:40', 2: '13:40', 3: '16:00', 4: '16:00' };
-const ROUND_PTS_LABELS = { 1: '1p', 2: '2p', 3: '3p', 4: 'Full' };
+const ROUND_PTS_LABELS = { 1: '2p', 2: '3p', 3: '4p', 4: 'Full' };
 
 // --- State ---
 let leaderboardData = [];
@@ -253,7 +253,7 @@ function getFlagEmoji(countryAlt) {
 //   Alle 3 pallplasser riktige: +8 bonus
 
 const CUT_PENALTY = -2;
-const EXACT_POS_BONUS = { 1: 2, 2: 3, 3: 5, 4: 5 }; // bonus for exact top-10 position per round
+const EXACT_POS_BONUS = { 1: 1, 2: 2, 3: 4, 4: 4 }; // bonus for exact top-10 position per round
 
 function calcRoundPoints(picks, leaderboard, roundNum) {
   const isSunday = roundNum === 4;
