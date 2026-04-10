@@ -978,7 +978,7 @@
 
     /* Scorecard */
     .lb-scorecard {
-      padding: 16px 20px 20px;
+      padding: 20px 24px 24px;
       background: #fafaf5;
       border-top: 2px solid var(--border-light);
       overflow-x: auto;
@@ -986,13 +986,13 @@
 
     .sc-round-tabs {
       display: flex;
-      gap: 6px;
-      margin-bottom: 14px;
+      gap: 8px;
+      margin-bottom: 18px;
     }
 
     .sc-round-tab {
-      padding: 7px 18px;
-      font-size: 13px;
+      padding: 9px 22px;
+      font-size: 14px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -1027,20 +1027,21 @@
     .sc-table {
       display: grid;
       grid-template-rows: auto auto auto;
-      margin-bottom: 10px;
-      min-width: 700px;
+      margin-bottom: 12px;
+      min-width: 760px;
+      row-gap: 2px;
     }
 
     .sc-row {
       display: grid;
-      grid-template-columns: 56px repeat(9, 1fr) 40px repeat(9, 1fr) 40px 44px;
+      grid-template-columns: 64px repeat(9, 1fr) 46px repeat(9, 1fr) 46px 52px;
       gap: 0;
     }
 
     .sc-cell {
-      padding: 8px 3px;
+      padding: 12px 4px;
       text-align: center;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       border-right: 1px solid rgba(0,0,0,0.06);
     }
@@ -1050,19 +1051,19 @@
     .sc-label {
       text-align: left;
       font-weight: 800;
-      color: var(--text-muted);
-      font-size: 12px;
+      color: var(--text);
+      font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
 
-    .sc-header .sc-cell { color: var(--text-muted); font-size: 13px; font-weight: 800; }
-    .sc-par .sc-cell { color: var(--text-muted); font-size: 14px; font-weight: 600; background: rgba(0,0,0,0.025); }
-    .sc-score .sc-cell { font-weight: 800; font-size: 15px; }
+    .sc-header .sc-cell { color: var(--text-muted); font-size: 14px; font-weight: 800; padding: 10px 4px; }
+    .sc-par .sc-cell { color: var(--text-muted); font-size: 15px; font-weight: 600; background: rgba(0,0,0,0.025); padding: 10px 4px; }
+    .sc-score .sc-cell { font-weight: 800; font-size: 17px; padding: 14px 4px; }
 
     .sc-out, .sc-in {
       font-weight: 800 !important;
-      font-size: 15px !important;
+      font-size: 17px !important;
       background: rgba(0,0,0,0.04) !important;
       border-left: 2px solid var(--border) !important;
       border-right: 2px solid var(--border) !important;
@@ -1070,7 +1071,7 @@
 
     .sc-tot {
       font-weight: 800 !important;
-      font-size: 15px !important;
+      font-size: 17px !important;
       background: rgba(0,0,0,0.06) !important;
       border-left: 2px solid var(--border) !important;
     }
@@ -1089,13 +1090,13 @@
     .sc-dbl-bogey .sc-num {
       position: relative;
       z-index: 1;
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      font-size: 14px;
+      font-size: 16px;
     }
 
     /* Birdie = single circle outline */
