@@ -184,8 +184,9 @@
       position: absolute;
       inset: 0;
       background: url('rory.png') center 20% / cover no-repeat;
-      opacity: 0.2;
+      opacity: 0.15;
       pointer-events: none;
+      z-index: -1;
     }
 
     /* Ranking tabs */
@@ -372,6 +373,8 @@
       align-items: center;
       position: relative;
       overflow: hidden;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      z-index: 0;
     }
 
     .reg-header::before {
@@ -379,8 +382,9 @@
       position: absolute;
       inset: 0;
       background: url('header_1.jpg') center / cover no-repeat;
-      opacity: 0.2;
+      opacity: 0.15;
       pointer-events: none;
+      z-index: -1;
     }
 
     .reg-header h3 {
@@ -880,15 +884,18 @@
       transition: margin 0.2s, border-radius 0.2s, transform 0.15s ease, box-shadow 0.2s ease;
       position: relative;
       overflow: hidden;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      z-index: 0;
     }
 
     .collapsible-header::before {
       content: '';
       position: absolute;
       inset: 0;
-      opacity: 0.2;
+      opacity: 0.15;
       pointer-events: none;
       background: url('header_1.jpg') center / cover no-repeat;
+      z-index: -1;
     }
 
     [data-section="picks"] .collapsible-header::before {
