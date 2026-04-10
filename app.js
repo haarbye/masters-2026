@@ -241,18 +241,22 @@ function getFlagEmoji(countryAlt) {
 
 // --- Calculate points ---
 //
+// MAKS 4 PICKS KAN SCORE TOPP-10 POENG PER RUNDE
+//
 // R1–R3 (torsdag–lørdag):
-//   Topp 10: R1=1p, R2=2p, R3=3p
+//   Topp 10: R1=1p, R2=2p, R3=3p  (maks 4 picks)
 //   Eksakt plassering bonus: R1=+2p, R2=+3p, R3=+5p
 //   CUT: -2p (slår inn etter fredag)
 //
 // R4 (søndag) — full pott:
-//   Eksakt riktig plass:  #1=35p  #2=15p  #3=10p  #4–10=4p
+//   Eksakt riktig plass:  #1=35p  #2=15p  #3=10p  #4–10=4p  (maks 4 picks)
 //   Valgt vinner, endte på pall: 10p
 //   Valgt pall, endte i topp 10: 5p
 //   I topp 10, feil plass: 5p
 //   DQ: -2p
 //   Alle 3 pallplasser riktige: +25 bonus
+
+const MAX_TOP10_PICKS = 4; // Maks antall picks som kan score topp-10 poeng
 
 const CUT_PENALTY = -2;
 const EXACT_POS_BONUS = { 1: 1, 2: 2, 3: 4, 4: 4 }; // bonus for exact top-10 position per round
@@ -318,7 +322,31 @@ function calcRoundPoints(picks, leaderboard, roundNum) {
     }
 
     details.push({ pickRank: pickSlot, name: picks[i], leaderboardPos: pos, score, thru, roundPts: pts, isCut, isDQ: match?.isDQ || false });
-    total += pts;
+  }
+
+  // === MAKS 4 PICKS KAN SCORE TOPP-10 POENG ===
+  // Finn alle picks som fikk topp-10 poeng (positive poeng, ikke cut/DQ)
+  const top10Indices = [];
+  for (let i = 0; i < details.length; i++) {
+    const d = details[i];
+    if (d.leaderboardPos !== null && d.leaderboardPos <= 10 && d.roundPts > 0) {
+      top10Indices.push(i);
+    }
+  }
+  if (top10Indices.length > MAX_TOP10_PICKS) {
+    // Sorter etter poeng (høyest først), behold kun de 4 beste
+    top10Indices.sort((a, b) => details[b].roundPts - details[a].roundPts);
+    const toZero = top10Indices.slice(MAX_TOP10_PICKS);
+    for (const idx of toZero) {
+      details[idx].roundPts = 0;
+      details[idx].cappedByRule = true; // Marker at denne ble nullet av regelen
+      hits--; // Juster hits-tellingen
+    }
+  }
+
+  // Summer poeng
+  for (const d of details) {
+    total += d.roundPts;
   }
 
   // === SØNDAGS-BONUS: Alle 3 pallplasser riktige ===
@@ -1183,7 +1211,7 @@ function renderLeaderboard(leaderboard, challengers) {
           <div class="lb-round text-center">${entry.rounds[2] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[3] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[4] || '-'}</div>
-          <div class="lb-total ${scoreClass} text-center">${entry.totalScore}</div>
+          <div class="lb-total ${scoreClass} text-center">${entry.totalScore}${entry.thru && entry.thru !== '-' && entry.thru !== 'F' ? `<span class="lb-thru-inline">${entry.thru}</span>` : ''}</div>
           <div class="lb-thru text-center">${entry.thru}</div>
         </div>
         ${isExpanded ? `<div class="lb-scorecard">${scorecardHtml}</div>` : ''}

@@ -965,6 +965,7 @@
     .lb-total.even-par { color: var(--text); }
 
     .lb-thru { text-align: center; font-size: 13px; color: var(--text-muted); }
+    .lb-thru-inline { display: none; }
 
     /* Sortable headers */
     .lb-sort-btn { cursor: pointer; user-select: none; }
@@ -1247,16 +1248,17 @@
 
       /* Leaderboard */
       .leaderboard-section { margin-bottom: 16px; }
-      .lb-header, .lb-row { grid-template-columns: 32px 1fr 50px 50px; padding: 8px 8px; font-size: 12px; }
-      .lb-header > :nth-child(3), .lb-header > :nth-child(4), .lb-header > :nth-child(5),
-      .lb-row > :nth-child(3), .lb-row > :nth-child(4), .lb-row > :nth-child(5) { display: none; }
+      .lb-header, .lb-row { grid-template-columns: 32px 1fr 56px; padding: 8px 8px; font-size: 12px; }
+      /* Hide round columns + thru on mobile */
+      .lb-header > :nth-child(3), .lb-header > :nth-child(4), .lb-header > :nth-child(5), .lb-header > :nth-child(8),
+      .lb-row > :nth-child(3), .lb-row > :nth-child(4), .lb-row > :nth-child(5), .lb-row > :nth-child(8) { display: none; }
       .lb-player { gap: 6px; }
       .lb-player .name { font-size: 12px; }
       .lb-player .flag { font-size: 14px; }
       .lb-headshot { width: 38px; height: 38px; }
       .lb-pos { font-size: 12px; }
-      .lb-total { font-size: 13px; }
-      .lb-thru { font-size: 11px; }
+      .lb-total { font-size: 14px; line-height: 1.3; }
+      .lb-thru-inline { display: block; font-size: 10px; font-weight: 600; color: var(--text-muted); }
 
       /* Scorecard */
       .lb-scorecard { padding: 12px 10px 16px; }
@@ -1303,7 +1305,7 @@
       .rank-pos { font-size: 18px; }
       .round-breakdown { grid-template-columns: repeat(2, 1fr); }
       .scoring-grid { grid-template-columns: 1fr; }
-      .lb-header, .lb-row { grid-template-columns: 28px 1fr 44px 44px; padding: 6px 6px; }
+      .lb-header, .lb-row { grid-template-columns: 28px 1fr 50px; padding: 6px 6px; }
       .lb-headshot { width: 32px; height: 32px; }
       .lb-player .name { font-size: 11px; }
       .pick-columns { gap: 8px; }
@@ -1337,6 +1339,114 @@
     .scoring-item:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
     .scoring-item .label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
     .scoring-item .value { font-size: 15px; font-weight: 700; }
+
+    /* ===== TOURNAMENT STATS ===== */
+    .stats-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 2px;
+      margin-bottom: var(--section-gap);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+    }
+
+    .stats-card:empty { display: none; }
+
+    .stats-card-header {
+      background: var(--masters-green);
+      color: white;
+      padding: 12px 20px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0;
+    }
+
+    .stat-block {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
+      border-right: 1px solid var(--border-light);
+    }
+
+    .stat-block:last-child { border-bottom: none; }
+
+    .stat-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .stat-value .stat-sub {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    .stat-detail {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .stat-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .stat-bar-label {
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 80px;
+      color: var(--text);
+    }
+
+    .stat-bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--border-light);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .stat-bar-val {
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 24px;
+      text-align: right;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat-block { border-right: none; padding: 12px 16px; }
+      .stat-value { font-size: 18px; }
+    }
 
     /* ===== STATUS BAR ===== */
     .status-bar {
@@ -1612,6 +1722,9 @@
 
     <!-- Registration -->
     <div id="registrationSection"></div>
+
+    <!-- Tournament Stats -->
+    <div class="stats-card" id="tournamentStats"></div>
 
     <!-- Scoring -->
     <div class="scoring-card">
