@@ -1606,27 +1606,33 @@
       background: #fff;
       border: 2px solid var(--masters-green);
       border-radius: 2px;
-      padding: 16px 20px;
+      padding: 0;
       margin-bottom: var(--section-gap);
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 14px;
-      font-style: italic;
-      color: var(--text);
-      line-height: 1.6;
       position: relative;
       animation: fadeSlideIn 0.5s ease;
+      overflow: hidden;
     }
 
     .leader-quote-label {
+      background: var(--masters-green);
+      color: white;
       font-family: 'Inter', sans-serif;
-      font-style: normal;
       font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: var(--masters-green);
-      margin-bottom: 6px;
+      padding: 8px 20px;
       display: block;
+    }
+
+    .leader-quote-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      font-style: italic;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.7;
+      padding: 16px 20px;
     }
 
     /* ===== ENTRANCE ANIMATIONS ===== */
@@ -2038,8 +2044,11 @@
 
     <!-- Leader quote -->
     <div class="leader-quote">
-      <span class="leader-quote-label">Dagens melding fra lederen</span>
-      &laquo;Jeg har ikke akkurat sovet d&aring;rlig i natt. Men jeg er ydmyk. Det er tre runder igjen, og som enhver seri&oslash;s golfentusiast vet: Augusta gir og Augusta tar. Lykke til til resten... dere trenger det..&raquo; <span style="font-style:normal;font-weight:700;color:var(--masters-green)">&mdash; Guttorm</span>
+      <span class="leader-quote-label">Dagens melding fra lederen etter runde 1</span>
+      <div class="leader-quote-text">
+        Jeg har ikke akkurat sovet d&aring;rlig i natt. Men jeg er ydmyk. Det er tre runder igjen, og som enhver seri&oslash;s golfentusiast vet: Augusta gir og Augusta tar. Lykke til resten... dere trenger det.
+        <span style="font-style:normal;color:var(--masters-green);display:block;margin-top:8px">&mdash; Guttorm</span>
+      </div>
     </div>
 
     <!-- Ranking + Chart swipeable -->
