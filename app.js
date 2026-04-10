@@ -250,9 +250,9 @@ function getFlagEmoji(countryAlt) {
 //   Eksakt riktig plass:  #1=35p  #2=15p  #3=10p  #4–10=4p
 //   Valgt vinner, endte på pall: 10p
 //   Valgt pall, endte i topp 10: 5p
-//   I topp 10, feil plass: 3p
+//   I topp 10, feil plass: 5p
 //   DQ: -2p
-//   Alle 3 pallplasser riktige: +8 bonus
+//   Alle 3 pallplasser riktige: +25 bonus
 
 const CUT_PENALTY = -2;
 const EXACT_POS_BONUS = { 1: 1, 2: 2, 3: 4, 4: 4 }; // bonus for exact top-10 position per round
@@ -302,7 +302,7 @@ function calcRoundPoints(picks, leaderboard, roundNum) {
           } else {
             if (pickSlot === 1 && pos >= 2 && pos <= 3) pts = 10;
             else if (pickSlot >= 2 && pickSlot <= 3 && pos >= 4 && pos <= 10) pts = 5;
-            else pts = 3;
+            else pts = 5;
           }
         } else {
           // === R1–R3: Flat top-10 points + exact position bonus ===
@@ -328,7 +328,7 @@ function calcRoundPoints(picks, leaderboard, roundNum) {
       const match = findPlayerOnLeaderboard(picks[i], leaderboard);
       if (match && match.position === (i + 1)) podiumCorrect++;
     }
-    if (podiumCorrect === 3) total += 8;
+    if (podiumCorrect === 3) total += 25;
   }
 
   return { total, hits, cuts, details };
