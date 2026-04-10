@@ -2316,12 +2316,13 @@ function renderChatMessages() {
 
     const canDelete = isOwn || isAdmin();
     const isChatAdmin = m.name === CHAT_ADMIN_NAME;
-    const adminTag = isChatAdmin ? ' <span class="chat-admin-tag">admin</span>' : '';
-    const nameClass = isChatAdmin ? 'chat-msg-name chat-msg-admin' : 'chat-msg-name';
+    const adminTag = isChatAdmin ? ' <span class="chat-admin-tag">ADMIN</span>' : '';
+    const ci = lastChallengers.findIndex(c => c.name === m.name);
+    const nameColor = isChatAdmin ? '#c8a951' : (ci >= 0 ? getColor(ci).text : '#1a2e1a');
 
     html += `<div class="chat-msg ${isOwn ? 'own' : ''} ${isChatAdmin ? 'admin-msg-row' : ''}">
       <div class="chat-msg-header">
-        <span class="${nameClass}">${esc(m.name)}${adminTag}</span>
+        <span class="chat-msg-name" style="color:${nameColor};font-weight:700">${esc(m.name)}${adminTag}</span>
         <span class="chat-msg-time">${time}</span>
         ${canDelete ? `<button class="chat-delete-btn" onclick="deleteChatMsg(${m.id})" title="Slett melding">&times;</button>` : ''}
       </div>
