@@ -498,8 +498,8 @@ function loadScoreHistory() {
 
 function saveScoreHistory() {
   try {
-    // Keep max 500 entries (~8 hours at 1/min)
-    if (scoreHistory.length > 500) scoreHistory = scoreHistory.slice(-500);
+    // Keep max 5000 entries (enough for entire tournament at 1/hour + changes)
+    if (scoreHistory.length > 5000) scoreHistory = scoreHistory.slice(-5000);
     localStorage.setItem(SCORE_HISTORY_KEY, JSON.stringify(scoreHistory));
   } catch {}
 }
@@ -509,15 +509,22 @@ function recordScoreSnapshot(challengers, results) {
   const scores = {};
   challengers.forEach((c, i) => { scores[c.name] = results[i].total; });
 
-  // Only record if scores changed or 5+ min since last entry
   const last = scoreHistory[scoreHistory.length - 1];
+
+  // Mark round-end: if tournament status is 'complete' and we haven't already marked this round
+  const isRoundEnd = tournamentStatus === 'complete' && currentRound >= 1 && currentRound <= 4;
+  const alreadyMarked = isRoundEnd && scoreHistory.some(s => s.roundEnd === currentRound);
+
   if (last) {
     const scoresChanged = JSON.stringify(last.scores) !== JSON.stringify(scores);
     const timeDiff = now - last.time;
-    if (!scoresChanged && timeDiff < 300000) return; // skip if same scores and <5 min
+    // Record if: scores changed, 60+ min passed, or we need to mark a round-end
+    if (!scoresChanged && timeDiff < 3600000 && !(!alreadyMarked && isRoundEnd)) return;
   }
 
-  scoreHistory.push({ time: now, scores });
+  const entry = { time: now, scores };
+  if (isRoundEnd && !alreadyMarked) entry.roundEnd = currentRound;
+  scoreHistory.push(entry);
   saveScoreHistory();
 }
 
@@ -545,7 +552,7 @@ function renderScoreChart() {
   const ctx = canvas.getContext('2d');
   ctx.scale(2, 2);
 
-  const PAD = { top: 20, right: 20, bottom: 36, left: 40 };
+  const PAD = { top: 20, right: 90, bottom: 36, left: 40 };
   const plotW = W - PAD.left - PAD.right;
   const plotH = H - PAD.top - PAD.bottom;
 
@@ -589,17 +596,46 @@ function renderScoreChart() {
     ctx.fillText(scoreVal + 'p', PAD.left - 6, y + 3);
   }
 
-  // Time labels
+  // Time labels — show day abbreviation + time, evenly spaced across plot width
   ctx.textAlign = 'center';
   ctx.fillStyle = '#5a6b5a';
   ctx.font = '10px Inter, sans-serif';
+  const DAY_ABBR = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
   const timeSteps = Math.min(6, scoreHistory.length);
   for (let i = 0; i < timeSteps; i++) {
     const idx = Math.round((scoreHistory.length - 1) * i / (timeSteps - 1));
     const t = scoreHistory[idx].time;
     const date = new Date(t);
-    const label = date.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+    const dayName = DAY_ABBR[date.getDay()];
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const label = `${dayName} ${hh}:${mm}`;
     ctx.fillText(label, tx(t), H - PAD.bottom + 14);
+  }
+
+  // Draw round-end markers (vertical dashed lines)
+  const ROUND_END_NAMES = { 1: 'Torsdag ferdig', 2: 'Fredag ferdig', 3: 'Lørdag ferdig', 4: 'Søndag ferdig' };
+  for (const s of scoreHistory) {
+    if (s.roundEnd) {
+      const x = tx(s.time);
+      ctx.save();
+      ctx.strokeStyle = '#2d5a27';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(x, PAD.top);
+      ctx.lineTo(x, PAD.top + plotH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      // Label above the line
+      ctx.fillStyle = '#2d5a27';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(ROUND_END_NAMES[s.roundEnd] || `R${s.roundEnd}`, x, PAD.top - 6);
+      ctx.restore();
+    }
   }
 
   // Draw lines per challenger (smooth bezier curves)
