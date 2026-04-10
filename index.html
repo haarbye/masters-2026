@@ -48,9 +48,6 @@
     .header-banner {
       width: 100%;
       display: block;
-      object-fit: cover;
-      object-position: center 40%;
-      height: 120px;
     }
 
     .header h1 { display: none; }
@@ -864,9 +861,17 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: url('header_1.jpg') center / cover no-repeat;
       opacity: 0.2;
       pointer-events: none;
+      background: url('header_1.jpg') center / cover no-repeat;
+    }
+
+    [data-section="picks"] .collapsible-header::before {
+      background-image: url('augusta-bridge.jpg');
+    }
+
+    [data-section="leaderboard"] .collapsible-header::before {
+      background-image: url('augusta-lake.jpg');
     }
 
     .collapsible-header:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-1px); }
@@ -1202,8 +1207,8 @@
       .sc-half .sc-num { width: 24px; height: 24px; font-size: 12px; }
 
       /* Header */
-      .header { padding: 24px 12px 20px; }
-      .header h1 { font-size: 26px; letter-spacing: 1px; }
+      .header { padding: 0 0 8px; }
+      .header h1 { display: none; }
       .header .subtitle { font-size: 12px; }
       .tournament-info { flex-wrap: wrap; gap: 6px; font-size: 10px; }
       .container { padding: 12px 8px; }
@@ -1287,8 +1292,8 @@
     }
 
     @media (max-width: 400px) {
-      .header h1 { font-size: 22px; }
-      .header { padding: 20px 8px 16px; }
+      .header h1 { display: none; }
+      .header { padding: 0 0 6px; }
       .rank-row { grid-template-columns: 30px 1fr auto; padding: 8px; }
       .rank-bar-wrap { display: none; }
       .rank-pos { font-size: 18px; }
@@ -1637,7 +1642,7 @@
 </head>
 <body>
   <div class="header">
-    <img src="natur.jpg" alt="Masters" class="header-banner">
+    <img src="masters-banner.webp" alt="Masters" class="header-banner">
     <div class="tournament-info">
       <span>Augusta National Golf Club</span>
       <span>|</span>
