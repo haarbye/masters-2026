@@ -386,10 +386,10 @@ function parseESPNData(data) {
           }
         }
         const currentRoundLs = c.linescores[c.linescores.length - 1];
-        if (currentRoundLs && currentRoundLs.linescores) {
+        if (currentRoundLs && currentRoundLs.linescores && currentRoundLs.linescores.length > 0) {
           const holes = currentRoundLs.linescores.length;
           thru = holes >= 18 ? 'F' : String(holes);
-        } else if (currentRoundLs && currentRoundLs.displayValue) {
+        } else if (currentRoundLs && currentRoundLs.displayValue && currentRoundLs.displayValue !== '-') {
           thru = 'F';
         }
       }
