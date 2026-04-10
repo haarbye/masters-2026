@@ -1255,6 +1255,16 @@ function renderLeaderboard(leaderboard, challengers) {
       statusBadge = `<span class="lb-tee-time">⛳ ${teeTimeStr}</span>`;
     }
 
+    // Mobile status badge (separate cell)
+    let mobileStatus = '';
+    if (isLive) {
+      mobileStatus = `<span class="lb-live-inline"><span class="lb-live-badge"></span> LIVE</span>`;
+    } else if (teeTimeStr) {
+      mobileStatus = `<span class="lb-tee-time">⛳ ${teeTimeStr}</span>`;
+    } else if (entry.thru && entry.thru !== '-') {
+      mobileStatus = `<span style="font-size:10px;color:var(--text-muted);font-weight:600">${entry.thru}</span>`;
+    }
+
     html += `
       <div class="lb-entry ${highlight}">
         <div class="lb-row" data-player="${escAttr(entry.name)}" style="cursor:pointer">
@@ -1263,9 +1273,10 @@ function renderLeaderboard(leaderboard, challengers) {
             ${entry.headshotUrl ? `<img class="lb-headshot" src="${entry.headshotUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
             <span class="flag">${flagEmoji}</span>
             <span class="name">${esc(entry.name)}</span>
-            <span class="picked-by">${dots}</span>
             ${statusBadge}
+            <span class="picked-by">${dots}</span>
           </div>
+          <div class="lb-status-mobile" style="display:none">${mobileStatus}</div>
           <div class="lb-round text-center">${entry.rounds[1] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[2] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[3] || '-'}</div>
