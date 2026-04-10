@@ -177,6 +177,11 @@
       letter-spacing: 1px;
       position: relative;
       overflow: hidden;
+      z-index: 0;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .ranking-card-header::before {
@@ -187,13 +192,6 @@
       opacity: 0.15;
       pointer-events: none;
       z-index: -1;
-    }
-
-    /* Ranking tabs */
-    .ranking-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .ranking-tabs {
@@ -231,8 +229,11 @@
     /* Chart */
     #scoreChart {
       width: 100%;
-      height: 280px;
+      height: 420px;
       display: block;
+    }
+    @media (min-width: 768px) {
+      #scoreChart { height: 500px; }
     }
 
     .chart-legend {

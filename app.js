@@ -559,7 +559,7 @@ function renderScoreChart() {
   const ctx = canvas.getContext('2d');
   ctx.scale(2, 2);
 
-  const PAD = { top: 28, right: 90, bottom: 36, left: 40 };
+  const PAD = { top: 28, right: 110, bottom: 36, left: 40 };
   const plotW = W - PAD.left - PAD.right;
   const plotH = H - PAD.top - PAD.bottom;
 
