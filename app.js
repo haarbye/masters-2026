@@ -2298,10 +2298,12 @@ function renderChatMessages() {
       lastDay = dayStr;
     }
 
+    const canDelete = isOwn || isAdmin();
     html += `<div class="chat-msg ${isOwn ? 'own' : ''}">
       <div class="chat-msg-header">
         <span class="chat-msg-name">${esc(m.name)}</span>
         <span class="chat-msg-time">${time}</span>
+        ${canDelete ? `<button class="chat-delete-btn" onclick="deleteChatMsg(${m.id})" title="Slett melding">&times;</button>` : ''}
       </div>
       <div class="chat-msg-text">${esc(m.message)}</div>
     </div>`;
@@ -2364,6 +2366,19 @@ async function sendChatMessage(sourceId) {
     sendBtn.disabled = false;
     msgInput?.focus();
   }
+}
+
+async function deleteChatMsg(msgId) {
+  if (!confirm('Slette denne meldingen?')) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?id=eq.${msgId}`, {
+      method: 'DELETE',
+      headers: SB_HEADERS,
+    });
+    chatMessages = chatMessages.filter(m => m.id !== msgId);
+    renderChatMessages();
+    updateChatBadges();
+  } catch (err) { console.error('Delete chat msg error:', err); }
 }
 
 initChat();
