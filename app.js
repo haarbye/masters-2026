@@ -769,6 +769,7 @@ loadScoreHistory();
 
 function renderRoundBreakdown(challengers, resultsByRound, activeRound) {
   const container = document.getElementById('roundBreakdown');
+  if (!container) return; // Section removed from HTML
   let html = '';
 
   for (let r = 1; r <= 4; r++) {
