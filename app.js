@@ -457,7 +457,7 @@ function renderRanking(challengers, results) {
 
   let html = '';
   ranked.forEach((r, idx) => {
-    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+    const medal = `${idx + 1}.`;
     const barWidth = Math.round((r.total / maxPts) * 100);
     const lead = idx === 0 ? '' : ` (${r.total - ranked[0].total})`;
 
