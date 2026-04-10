@@ -646,6 +646,29 @@ function renderScoreChart() {
     }
   }
 
+  // Draw event markers (e.g. scoring adjustments)
+  for (const s of scoreHistory) {
+    if (s.event) {
+      const x = tx(s.time);
+      ctx.save();
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x, PAD.top);
+      ctx.lineTo(x, PAD.top + plotH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 9px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.event, x, PAD.top + plotH + 12);
+      ctx.restore();
+    }
+  }
+
   // Draw lines per challenger (smooth bezier curves)
   names.forEach((name, ni) => {
     const color = getColor(lastChallengers.findIndex(c => c.name === name));
@@ -701,6 +724,22 @@ function renderScoreChart() {
 }
 
 loadScoreHistory();
+
+// Inject scoring adjustment event marker if not already present
+(function injectScoringEvent() {
+  const eventTime = new Date('2026-04-10T09:00:00+02:00').getTime();
+  if (!scoreHistory.some(s => s.event === 'Poengjustering')) {
+    // Insert at the right chronological position
+    const idx = scoreHistory.findIndex(s => s.time >= eventTime);
+    const entry = { time: eventTime, scores: {}, event: 'Poengjustering' };
+    if (idx === -1) {
+      scoreHistory.push(entry);
+    } else {
+      scoreHistory.splice(idx, 0, entry);
+    }
+    saveScoreHistory();
+  }
+})();
 
 function renderRoundBreakdown(challengers, resultsByRound, activeRound) {
   const container = document.getElementById('roundBreakdown');
