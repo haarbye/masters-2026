@@ -1154,20 +1154,62 @@
     .sc-half {
       min-width: 0 !important;
       width: 100%;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
     }
+
+    .sc-half .sc-cell {
+      border-right: 1px solid rgba(0,0,0,0.08);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .sc-half .sc-cell:last-child { border-right: none; }
+    .sc-half .sc-score .sc-cell { border-bottom: none; }
 
     @media (max-width: 768px) {
       .sc-mobile { display: block; }
       .sc-desktop { display: none !important; }
-      .sc-half .sc-cell { padding: 10px 2px; font-size: 14px; }
-      .sc-half .sc-header .sc-cell { font-size: 13px; padding: 8px 2px; }
-      .sc-half .sc-par .sc-cell { font-size: 14px; padding: 8px 2px; }
-      .sc-half .sc-score .sc-cell { font-size: 16px; padding: 12px 2px; }
-      .sc-half .sc-label { font-size: 11px; }
-      .sc-half .sc-out, .sc-half .sc-in { font-size: 16px !important; }
-      .sc-half .sc-tot { font-size: 16px !important; }
-      .sc-half .sc-num { width: 28px; height: 28px; font-size: 14px; }
+
+      /* PGA-style compact scorecard */
+      .sc-half .sc-header .sc-cell {
+        font-size: 11px; font-weight: 800; padding: 6px 1px;
+        background: var(--masters-green); color: #fff;
+        border-right-color: rgba(255,255,255,0.15);
+        border-bottom: 2px solid var(--masters-dark);
+      }
+      .sc-half .sc-header .sc-label {
+        color: #fff; font-size: 10px;
+      }
+      .sc-half .sc-par .sc-cell {
+        font-size: 12px; font-weight: 600; padding: 5px 1px;
+        background: #f0ebe0; color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+      }
+      .sc-half .sc-par .sc-label { font-size: 10px; color: var(--text-muted); }
+      .sc-half .sc-score .sc-cell {
+        font-size: 14px; font-weight: 800; padding: 8px 1px;
+        background: #fff;
+      }
+      .sc-half .sc-score .sc-label { font-size: 10px; }
+      .sc-half .sc-out, .sc-half .sc-in {
+        font-size: 14px !important;
+        background: rgba(0,103,71,0.08) !important;
+        border-left: 1.5px solid var(--border) !important;
+        border-right: none !important;
+      }
+      .sc-half .sc-header .sc-out, .sc-half .sc-header .sc-in {
+        background: var(--masters-dark) !important;
+      }
+      .sc-half .sc-tot {
+        font-size: 14px !important;
+        background: rgba(200,169,81,0.15) !important;
+        border-left: 1.5px solid var(--border) !important;
+      }
+      .sc-half .sc-header .sc-tot {
+        background: var(--masters-dark) !important;
+      }
+      .sc-half .sc-num { width: 24px; height: 24px; font-size: 12px; }
 
       /* Header */
       .header { padding: 24px 12px 20px; }
