@@ -2092,10 +2092,36 @@ let chatOpen = { chatMobile: false, chatDesktop: true };
 let chatUnread = 0;
 let chatSeenId = parseInt(localStorage.getItem('chatSeenId') || '0');
 
+// Unique session ID per browser — persists across reloads
+function getChatSessionId() {
+  let sid = localStorage.getItem('chatSessionId');
+  if (!sid) {
+    sid = crypto.randomUUID();
+    localStorage.setItem('chatSessionId', sid);
+  }
+  return sid;
+}
+const chatSessionId = getChatSessionId();
+
 function getChatNameOptions() {
   const names = lastChallengers.map(c => c.name).sort();
-  // Sebastian only available for admin
-  return names.filter(n => n !== CHAT_ADMIN_NAME || isAdmin());
+  const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+
+  // Build map of name → session_id from recent messages
+  const nameSessions = {};
+  for (const m of chatMessages) {
+    if (m.session_id && new Date(m.created_at).getTime() > twoHoursAgo) {
+      nameSessions[m.name] = m.session_id; // last session that used this name
+    }
+  }
+
+  return names.filter(n => {
+    // Sebastian only for admin
+    if (n === CHAT_ADMIN_NAME && !isAdmin()) return false;
+    // If name was used by another session in last 2h, block it
+    if (nameSessions[n] && nameSessions[n] !== chatSessionId && n !== chatMyName) return false;
+    return true;
+  });
 }
 
 function updateChatNameDropdowns() {
@@ -2222,7 +2248,7 @@ function initChat() {
 async function fetchChatMessages() {
   try {
     const resp = await fetch(
-      `${SUPABASE_URL}/rest/v1/chat_messages?select=id,name,message,created_at&order=created_at.asc&limit=200`,
+      `${SUPABASE_URL}/rest/v1/chat_messages?select=id,name,message,created_at,session_id&order=created_at.asc&limit=200`,
       { headers: SB_HEADERS }
     );
     if (!resp.ok) return;
@@ -2247,6 +2273,7 @@ async function fetchChatMessages() {
     }
     updateChatBadges();
     renderChatMessages();
+    updateChatNameDropdowns(); // refresh available names based on session locks
 
     if (newMsgs.length > 0) {
       ['chatMobile', 'chatDesktop'].forEach(id => {
@@ -2330,7 +2357,7 @@ async function sendChatMessage(sourceId) {
 
   sendBtn.disabled = true;
   try {
-    const payload = { name, message };
+    const payload = { name, message, session_id: chatSessionId };
     // Include admin token for Sebastian messages (validated by Supabase RLS)
     if (name === CHAT_ADMIN_NAME && isAdmin()) {
       payload.admin_token = 'guttorm-er-sansen-2026';
