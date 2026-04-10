@@ -959,7 +959,24 @@
     .lb-row:last-child { border-bottom: none; }
     .lb-row.highlighted { background: #fef9e7; }
 
-    .lb-pos { font-weight: 700; color: var(--text-muted); }
+    .lb-pos { font-weight: 700; color: var(--text-muted); position: relative; }
+
+    .lb-live-badge {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #e53935;
+      margin-left: 4px;
+      vertical-align: middle;
+      box-shadow: 0 0 0 0 rgba(229,57,53,0.5);
+      animation: lb-pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes lb-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.5); }
+      50% { box-shadow: 0 0 0 4px rgba(229,57,53,0); }
+    }
 
     .lb-player { display: flex; align-items: center; gap: 8px; }
     .lb-headshot {

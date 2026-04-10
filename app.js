@@ -1173,10 +1173,12 @@ function renderLeaderboard(leaderboard, challengers) {
       scorecardHtml = buildScorecardHtml(entry);
     }
 
+    const isLive = entry.thru && entry.thru !== '-' && entry.thru !== 'F' && entry.thru !== '';
+
     html += `
       <div class="lb-entry ${highlight}">
         <div class="lb-row" data-player="${escAttr(entry.name)}" style="cursor:pointer">
-          <div class="lb-pos">${entry.posDisplay}</div>
+          <div class="lb-pos">${entry.posDisplay}${isLive ? '<span class="lb-live-badge" title="Live på banen"></span>' : ''}</div>
           <div class="lb-player">
             ${entry.headshotUrl ? `<img class="lb-headshot" src="${entry.headshotUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
             <span class="flag">${flagEmoji}</span>
