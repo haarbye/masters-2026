@@ -260,13 +260,51 @@ function getFlagEmoji(countryAlt) {
 const CUT_PENALTY = -2;
 const EXACT_POS_BONUS = { 1: 1, 2: 2, 3: 4, 4: 4 }; // bonus for exact top-10 position per round
 
-function calcRoundPoints(picks, leaderboard, roundNum) {
+// Calculate leaderboard positions after a specific round (not live/current)
+function getPositionsAfterRound(leaderboard, roundNum) {
+  // Build cumulative score through roundNum for each player
+  const scored = leaderboard
+    .filter(p => !p.isCut || roundNum < 3) // include cut players for R1/R2
+    .map(p => {
+      let cumulativeScore = 0;
+      let hasAllRounds = true;
+      for (let r = 1; r <= roundNum; r++) {
+        const roundScore = p.rounds?.[r];
+        if (roundScore === undefined || roundScore === '-' || roundScore === null) {
+          hasAllRounds = false;
+          break;
+        }
+        cumulativeScore += parseInt(roundScore, 10) || 0;
+      }
+      return { name: p.name, score: cumulativeScore, hasAllRounds, isCut: p.isCut, isDQ: p.isDQ };
+    })
+    .filter(p => p.hasAllRounds)
+    .sort((a, b) => a.score - b.score);
+
+  // Assign positions with ties
+  const positions = {};
+  let i = 0;
+  while (i < scored.length) {
+    let j = i + 1;
+    while (j < scored.length && scored[j].score === scored[i].score) j++;
+    for (let k = i; k < j; k++) {
+      positions[scored[k].name] = i + 1; // 1-based position
+    }
+    i = j;
+  }
+  return positions;
+}
+
+function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
   const isSunday = roundNum === 4;
   const top10pts = TOP10_PTS_PER_ROUND[roundNum] || 1;
   let total = 0;
   let hits = 0;
   let cuts = 0;
   const details = [];
+
+  // For completed rounds, use positions calculated from that round's cumulative scores
+  const roundPositions = useRoundPositions ? getPositionsAfterRound(leaderboard, roundNum) : null;
 
   for (let i = 0; i < picks.length; i++) {
     const match = findPlayerOnLeaderboard(picks[i], leaderboard);
@@ -278,7 +316,8 @@ function calcRoundPoints(picks, leaderboard, roundNum) {
     const pickSlot = i + 1;
 
     if (match && typeof match.position === 'number') {
-      pos = match.position;
+      // Use round-specific position for completed rounds, live position for current round
+      pos = roundPositions ? (roundPositions[match.name] || 999) : match.position;
       score = match.totalScore;
       thru = match.thru;
 
@@ -1889,7 +1928,9 @@ async function updateDashboard() {
     const cumulativeResults = challengers.map(() => ({ total: 0, hits: 0, cuts: 0, details: [] }));
 
     for (let r = 1; r <= currentRound; r++) {
-      const roundResults = challengers.map(c => calcRoundPoints(c.picks, leaderboardData, r));
+      // For completed rounds (r < currentRound), use that round's positions — not live positions
+      const isCompletedRound = r < currentRound;
+      const roundResults = challengers.map(c => calcRoundPoints(c.picks, leaderboardData, r, isCompletedRound));
       resultsByRound[r] = roundResults.map(res => res.total);
 
       // Accumulate totals (skip round 1 for late registrants)
