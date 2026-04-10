@@ -978,30 +978,33 @@
 
     /* Scorecard */
     .lb-scorecard {
-      padding: 12px 16px 16px;
+      padding: 16px 20px 20px;
       background: #fafaf5;
-      border-top: 1px solid var(--border-light);
+      border-top: 2px solid var(--border-light);
       overflow-x: auto;
     }
 
     .sc-round-tabs {
       display: flex;
-      gap: 4px;
-      margin-bottom: 10px;
+      gap: 6px;
+      margin-bottom: 14px;
     }
 
     .sc-round-tab {
-      padding: 4px 12px;
-      font-size: 11px;
+      padding: 7px 18px;
+      font-size: 13px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border: 1px solid var(--border-light);
+      border: 2px solid var(--border-light);
       border-radius: 2px;
       background: var(--bg);
       color: var(--text-muted);
       cursor: pointer;
+      transition: all 0.15s ease;
     }
+
+    .sc-round-tab:hover { border-color: var(--border); }
 
     .sc-round-tab.active {
       background: var(--masters-green);
@@ -1010,13 +1013,13 @@
     }
 
     .sc-round-label {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-muted);
-      margin-bottom: 6px;
-      margin-top: 10px;
+      margin-bottom: 8px;
+      margin-top: 12px;
     }
 
     .sc-round-label:first-child { margin-top: 0; }
@@ -1024,40 +1027,42 @@
     .sc-table {
       display: grid;
       grid-template-rows: auto auto auto;
-      margin-bottom: 8px;
-      min-width: 620px;
+      margin-bottom: 10px;
+      min-width: 700px;
     }
 
     .sc-row {
       display: grid;
-      grid-template-columns: 42px repeat(9, 1fr) 32px repeat(9, 1fr) 32px 36px;
+      grid-template-columns: 56px repeat(9, 1fr) 40px repeat(9, 1fr) 40px 44px;
       gap: 0;
     }
 
     .sc-cell {
-      padding: 4px 2px;
+      padding: 8px 3px;
       text-align: center;
-      font-size: 11px;
-      font-weight: 500;
-      border-right: 1px solid rgba(0,0,0,0.04);
+      font-size: 14px;
+      font-weight: 600;
+      border-right: 1px solid rgba(0,0,0,0.06);
     }
 
     .sc-cell:last-child { border-right: none; }
 
     .sc-label {
       text-align: left;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--text-muted);
-      font-size: 10px;
+      font-size: 12px;
       text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
 
-    .sc-header .sc-cell { color: var(--text-muted); font-size: 10px; font-weight: 700; }
-    .sc-par .sc-cell { color: var(--text-muted); font-size: 11px; background: rgba(0,0,0,0.02); }
-    .sc-score .sc-cell { font-weight: 700; font-size: 12px; }
+    .sc-header .sc-cell { color: var(--text-muted); font-size: 13px; font-weight: 800; }
+    .sc-par .sc-cell { color: var(--text-muted); font-size: 14px; font-weight: 600; background: rgba(0,0,0,0.025); }
+    .sc-score .sc-cell { font-weight: 800; font-size: 15px; }
 
     .sc-out, .sc-in {
       font-weight: 800 !important;
+      font-size: 15px !important;
       background: rgba(0,0,0,0.04) !important;
       border-left: 2px solid var(--border) !important;
       border-right: 2px solid var(--border) !important;
@@ -1065,6 +1070,7 @@
 
     .sc-tot {
       font-weight: 800 !important;
+      font-size: 15px !important;
       background: rgba(0,0,0,0.06) !important;
       border-left: 2px solid var(--border) !important;
     }
@@ -1083,50 +1089,50 @@
     .sc-dbl-bogey .sc-num {
       position: relative;
       z-index: 1;
-      width: 22px;
-      height: 22px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      font-size: 11px;
+      font-size: 14px;
     }
 
     /* Birdie = single circle outline */
     .sc-birdie .sc-num {
-      border: 1.5px solid #333;
+      border: 2px solid #333;
       border-radius: 50%;
     }
 
     /* Eagle = concentric double circle outlines */
     .sc-eagle .sc-num {
-      border: 1.5px solid #333;
+      border: 2px solid #333;
       border-radius: 50%;
     }
     .sc-eagle .sc-num::after {
       content: '';
       position: absolute;
-      inset: -5px;
-      border: 1.5px solid #333;
+      inset: -6px;
+      border: 2px solid #333;
       border-radius: 50%;
     }
 
     /* Bogey = single square outline */
     .sc-bogey .sc-num {
-      border: 1.5px solid #333;
+      border: 2px solid #333;
       border-radius: 1px;
     }
 
     /* Double bogey+ = concentric double square outlines */
     .sc-dbl-bogey .sc-num {
-      border: 1.5px solid #333;
+      border: 2px solid #333;
       border-radius: 1px;
     }
     .sc-dbl-bogey .sc-num::after {
       content: '';
       position: absolute;
-      inset: -5px;
-      border: 1.5px solid #333;
+      inset: -6px;
+      border: 2px solid #333;
       border-radius: 1px;
     }
 
