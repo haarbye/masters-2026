@@ -1776,9 +1776,17 @@
         border-left: 2px solid var(--border);
         box-shadow: -2px 0 12px rgba(0,0,0,0.08);
         z-index: 100;
+        transition: height 0.3s ease;
+      }
+      .chat-sidebar.chat-collapsed {
+        height: auto;
+        bottom: auto;
       }
       .chat-mobile-only {
         display: none;
+      }
+      .container {
+        transition: margin-right 0.3s ease;
       }
     }
 
@@ -1803,6 +1811,59 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chat-header:hover { opacity: 0.92; }
+
+    .chat-toggle-icon {
+      margin-left: auto;
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+
+    .chat-badge {
+      background: #dc2626;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: 0;
+      animation: chatBadgePulse 1.5s ease-in-out infinite;
+    }
+
+    .chat-badge:empty { display: none; }
+
+    @keyframes chatBadgePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .chat-body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.2s ease;
+    }
+
+    .chat-card .chat-body { max-height: 500px; opacity: 1; }
+    .chat-card.chat-collapsed .chat-body { max-height: 0; opacity: 0; }
+
+    .chat-sidebar .chat-body { flex: 1; overflow: hidden; }
+    .chat-sidebar.chat-collapsed .chat-body { max-height: 0; opacity: 0; flex: 0; }
+
+    .chat-sidebar.chat-collapsed {
+      height: auto;
     }
 
     .chat-header .chat-online {
@@ -1812,7 +1873,6 @@
       text-transform: none;
       letter-spacing: 0;
       opacity: 0.7;
-      margin-left: auto;
     }
 
     .chat-messages {

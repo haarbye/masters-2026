@@ -2023,22 +2023,63 @@ const CHAT_POLL_INTERVAL = 10000; // 10s
 let chatMessages = [];
 let chatLastId = 0;
 let chatMyName = localStorage.getItem('chatName') || '';
+let chatOpen = { chatMobile: false, chatDesktop: true }; // desktop open by default
+let chatUnread = 0;
+let chatSeenId = parseInt(localStorage.getItem('chatSeenId') || '0');
 
 function chatHtml(targetId) {
-  const isSidebar = targetId === 'chatDesktop';
   return `
-    <div class="chat-header">
+    <div class="chat-header" onclick="toggleChat('${targetId}')">
       💬 Chat
-      <span class="chat-online" id="chatOnline-${targetId}"></span>
+      <span class="chat-badge" id="chatBadge-${targetId}"></span>
+      <span class="chat-toggle-icon" id="chatToggle-${targetId}">▼</span>
     </div>
-    <div class="chat-messages" id="chatMsgs-${targetId}">
-      <div class="chat-empty">Ingen meldinger ennå — vær den første!</div>
-    </div>
-    <div class="chat-input-wrap">
-      <input type="text" class="chat-name-input" id="chatName-${targetId}" placeholder="Navn" maxlength="20" value="${esc(chatMyName)}">
-      <input type="text" class="chat-msg-input" id="chatInput-${targetId}" placeholder="Skriv en melding..." maxlength="500">
-      <button class="chat-send-btn" id="chatSend-${targetId}">Send</button>
+    <div class="chat-body" id="chatBody-${targetId}">
+      <div class="chat-messages" id="chatMsgs-${targetId}">
+        <div class="chat-empty">Ingen meldinger ennå — vær den første!</div>
+      </div>
+      <div class="chat-input-wrap">
+        <input type="text" class="chat-name-input" id="chatName-${targetId}" placeholder="Navn" maxlength="20" value="${esc(chatMyName)}">
+        <input type="text" class="chat-msg-input" id="chatInput-${targetId}" placeholder="Skriv en melding..." maxlength="500">
+        <button class="chat-send-btn" id="chatSend-${targetId}">Send</button>
+      </div>
     </div>`;
+}
+
+function toggleChat(targetId) {
+  chatOpen[targetId] = !chatOpen[targetId];
+  const container = document.getElementById(targetId);
+  const icon = document.getElementById(`chatToggle-${targetId}`);
+  if (!container) return;
+
+  if (chatOpen[targetId]) {
+    container.classList.remove('chat-collapsed');
+    if (icon) icon.textContent = '▲';
+    // Mark as read
+    chatUnread = 0;
+    if (chatMessages.length > 0) {
+      chatSeenId = chatMessages[chatMessages.length - 1].id;
+      localStorage.setItem('chatSeenId', chatSeenId);
+    }
+    updateChatBadges();
+    // Scroll to bottom
+    const msgs = document.getElementById(`chatMsgs-${targetId}`);
+    if (msgs) setTimeout(() => msgs.scrollTop = msgs.scrollHeight, 50);
+  } else {
+    container.classList.add('chat-collapsed');
+    if (icon) icon.textContent = '▼';
+  }
+}
+
+function updateChatBadges() {
+  ['chatMobile', 'chatDesktop'].forEach(id => {
+    const badge = document.getElementById(`chatBadge-${id}`);
+    if (badge) badge.textContent = chatUnread > 0 ? chatUnread : '';
+  });
+  // Update page title
+  document.title = chatUnread > 0
+    ? `(${chatUnread}) The Masters 2026 — Tippekonkurranse`
+    : 'The Masters 2026 — Tippekonkurranse';
 }
 
 function initChat() {
@@ -2046,6 +2087,11 @@ function initChat() {
   const desktop = document.getElementById('chatDesktop');
   if (mobile) mobile.innerHTML = chatHtml('chatMobile');
   if (desktop) desktop.innerHTML = chatHtml('chatDesktop');
+
+  // Set initial collapsed state
+  if (mobile) { mobile.classList.add('chat-collapsed'); chatOpen.chatMobile = false; }
+  // Desktop starts open
+  if (desktop) { chatOpen.chatDesktop = true; }
 
   // Wire up both instances
   ['chatMobile', 'chatDesktop'].forEach(id => {
@@ -2062,7 +2108,6 @@ function initChat() {
     nameInput?.addEventListener('input', () => {
       chatMyName = nameInput.value.trim();
       localStorage.setItem('chatName', chatMyName);
-      // Sync other input
       const otherId = id === 'chatMobile' ? 'chatDesktop' : 'chatMobile';
       const other = document.getElementById(`chatName-${otherId}`);
       if (other) other.value = chatMyName;
@@ -2084,17 +2129,36 @@ async function fetchChatMessages() {
     const msgs = await resp.json();
     if (!msgs.length && !chatMessages.length) return;
 
+    const isFirstLoad = chatMessages.length === 0;
     const newMsgs = msgs.filter(m => m.id > chatLastId);
     chatMessages = msgs;
     if (msgs.length > 0) chatLastId = msgs[msgs.length - 1].id;
 
+    // Count unread (messages after last seen, not from self)
+    const unseenMsgs = msgs.filter(m => m.id > chatSeenId && m.name.toLowerCase() !== chatMyName.toLowerCase());
+    // Only show unread if chat is collapsed
+    const anyOpen = Object.values(chatOpen).some(v => v);
+    if (anyOpen && !isFirstLoad) {
+      // Chat is open — mark as read
+      chatUnread = 0;
+      if (msgs.length > 0) {
+        chatSeenId = msgs[msgs.length - 1].id;
+        localStorage.setItem('chatSeenId', chatSeenId);
+      }
+    } else {
+      chatUnread = unseenMsgs.length;
+    }
+    updateChatBadges();
+
     renderChatMessages();
 
-    // Auto-scroll if new messages
+    // Auto-scroll if new messages and chat is open
     if (newMsgs.length > 0) {
       ['chatMobile', 'chatDesktop'].forEach(id => {
-        const el = document.getElementById(`chatMsgs-${id}`);
-        if (el) el.scrollTop = el.scrollHeight;
+        if (chatOpen[id]) {
+          const el = document.getElementById(`chatMsgs-${id}`);
+          if (el) el.scrollTop = el.scrollHeight;
+        }
       });
     }
   } catch (err) { console.error('Chat fetch error:', err); }
