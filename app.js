@@ -2081,17 +2081,27 @@ setInterval(() => {
 // ============================================================
 
 const CHAT_POLL_INTERVAL = 10000; // 10s
+const CHAT_ADMIN_NAME = 'Sebastian';
 let chatMessages = [];
 let chatLastId = 0;
 let chatMyName = localStorage.getItem('chatName') || '';
-let chatNameLocked = !!localStorage.getItem('chatNameLocked'); // locked after first send
 let chatOpen = { chatMobile: false, chatDesktop: true };
 let chatUnread = 0;
 let chatSeenId = parseInt(localStorage.getItem('chatSeenId') || '0');
 
+function getChatNameOptions() {
+  const names = lastChallengers.map(c => c.name).sort();
+  // Sebastian only available for admin
+  return names.filter(n => n !== CHAT_ADMIN_NAME || isAdmin());
+}
+
 function chatHtml(targetId) {
-  const lockedClass = chatNameLocked ? 'locked' : '';
-  const nameDisabled = chatNameLocked ? 'disabled' : '';
+  const options = getChatNameOptions();
+  const optionsHtml = options.length > 0
+    ? `<option value="" disabled ${!chatMyName ? 'selected' : ''}>Velg navn</option>` +
+      options.map(n => `<option value="${escAttr(n)}" ${n === chatMyName ? 'selected' : ''}>${esc(n)}</option>`).join('')
+    : '<option value="" disabled selected>Laster...</option>';
+
   return `
     <div class="chat-header" onclick="toggleChat('${targetId}')">
       💬 Chat <span class="chat-msg-count" id="chatCount-${targetId}"></span>
@@ -2104,10 +2114,7 @@ function chatHtml(targetId) {
       </div>
       <div class="chat-scroll-btn" id="chatScrollBtn-${targetId}" style="display:none" onclick="chatScrollToBottom('${targetId}')">▼ Nye meldinger</div>
       <div class="chat-input-wrap">
-        <div class="chat-name-wrap ${lockedClass}" id="chatNameWrap-${targetId}">
-          <input type="text" class="chat-name-input" id="chatName-${targetId}" placeholder="Navn" maxlength="20" value="${esc(chatMyName)}" ${nameDisabled}>
-          ${chatNameLocked ? `<button class="chat-name-change" onclick="unlockChatName('${targetId}')" title="Bytt navn">✎</button>` : ''}
-        </div>
+        <select class="chat-name-select" id="chatName-${targetId}">${optionsHtml}</select>
         <input type="text" class="chat-msg-input" id="chatInput-${targetId}" placeholder="Skriv en melding..." maxlength="500">
         <button class="chat-send-btn" id="chatSend-${targetId}">Send</button>
       </div>
@@ -2149,37 +2156,6 @@ function updateChatBadges() {
     : 'The Masters 2026 — Tippekonkurranse';
 }
 
-function unlockChatName(targetId) {
-  if (!confirm('Er du sikker på at du vil bytte navn?')) return;
-  chatNameLocked = false;
-  localStorage.removeItem('chatNameLocked');
-  // Re-render chat UI
-  initChat();
-}
-
-function lockChatName() {
-  chatNameLocked = true;
-  localStorage.setItem('chatNameLocked', '1');
-  // Update all name inputs to locked state
-  ['chatMobile', 'chatDesktop'].forEach(id => {
-    const wrap = document.getElementById(`chatNameWrap-${id}`);
-    const input = document.getElementById(`chatName-${id}`);
-    if (wrap && input) {
-      wrap.classList.add('locked');
-      input.disabled = true;
-      // Add change button if not present
-      if (!wrap.querySelector('.chat-name-change')) {
-        const btn = document.createElement('button');
-        btn.className = 'chat-name-change';
-        btn.title = 'Bytt navn';
-        btn.textContent = '✎';
-        btn.onclick = () => unlockChatName(id);
-        wrap.appendChild(btn);
-      }
-    }
-  });
-}
-
 function chatScrollToBottom(targetId) {
   const el = document.getElementById(`chatMsgs-${targetId}`);
   if (el) el.scrollTop = el.scrollHeight;
@@ -2199,7 +2175,7 @@ function initChat() {
   ['chatMobile', 'chatDesktop'].forEach(id => {
     const sendBtn = document.getElementById(`chatSend-${id}`);
     const input = document.getElementById(`chatInput-${id}`);
-    const nameInput = document.getElementById(`chatName-${id}`);
+    const nameSelect = document.getElementById(`chatName-${id}`);
     const msgsEl = document.getElementById(`chatMsgs-${id}`);
 
     if (!sendBtn) return;
@@ -2207,10 +2183,9 @@ function initChat() {
     sendBtn.addEventListener('click', () => sendChatMessage(id));
     input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMessage(id); });
 
-    // Sync name between both inputs (only when not locked)
-    nameInput?.addEventListener('input', () => {
-      if (chatNameLocked) return;
-      chatMyName = nameInput.value.trim();
+    // Sync name select between both instances
+    nameSelect?.addEventListener('change', () => {
+      chatMyName = nameSelect.value;
       localStorage.setItem('chatName', chatMyName);
       const otherId = id === 'chatMobile' ? 'chatDesktop' : 'chatMobile';
       const other = document.getElementById(`chatName-${otherId}`);
@@ -2299,9 +2274,13 @@ function renderChatMessages() {
     }
 
     const canDelete = isOwn || isAdmin();
-    html += `<div class="chat-msg ${isOwn ? 'own' : ''}">
+    const isChatAdmin = m.name === CHAT_ADMIN_NAME;
+    const adminTag = isChatAdmin ? ' <span class="chat-admin-tag">admin</span>' : '';
+    const nameClass = isChatAdmin ? 'chat-msg-name chat-msg-admin' : 'chat-msg-name';
+
+    html += `<div class="chat-msg ${isOwn ? 'own' : ''} ${isChatAdmin ? 'admin-msg-row' : ''}">
       <div class="chat-msg-header">
-        <span class="chat-msg-name">${esc(m.name)}</span>
+        <span class="${nameClass}">${esc(m.name)}${adminTag}</span>
         <span class="chat-msg-time">${time}</span>
         ${canDelete ? `<button class="chat-delete-btn" onclick="deleteChatMsg(${m.id})" title="Slett melding">&times;</button>` : ''}
       </div>
@@ -2316,33 +2295,24 @@ function renderChatMessages() {
 }
 
 async function sendChatMessage(sourceId) {
-  const nameInput = document.getElementById(`chatName-${sourceId}`);
+  const nameSelect = document.getElementById(`chatName-${sourceId}`);
   const msgInput = document.getElementById(`chatInput-${sourceId}`);
   const sendBtn = document.getElementById(`chatSend-${sourceId}`);
 
-  const name = (nameInput?.value || '').trim();
+  const name = (nameSelect?.value || '').trim();
   const message = (msgInput?.value || '').trim();
 
-  if (!name || name.length < 2) {
-    nameInput?.focus();
-    return;
-  }
+  if (!name) { alert('Velg navnet ditt fra listen.'); return; }
   if (!message) { msgInput?.focus(); return; }
 
-  // Validate name matches a challenger (case-insensitive)
-  const challengers = lastChallengers.map(c => c.name.toLowerCase());
-  if (challengers.length > 0 && !challengers.includes(name.toLowerCase())) {
-    const suggestion = lastChallengers.find(c => c.name.toLowerCase().startsWith(name.toLowerCase()));
-    alert(`Navnet "${name}" finnes ikke blant deltakerne.${suggestion ? ` Mente du "${suggestion.name}"?` : ' Skriv inn navnet du registrerte deg med.'}`);
-    nameInput?.focus();
+  // Block Sebastian for non-admin
+  if (name === CHAT_ADMIN_NAME && !isAdmin()) {
+    alert('Dette navnet er reservert for admin.');
     return;
   }
 
   chatMyName = name;
   localStorage.setItem('chatName', chatMyName);
-
-  // Lock name after first successful send
-  if (!chatNameLocked) lockChatName();
 
   sendBtn.disabled = true;
   try {

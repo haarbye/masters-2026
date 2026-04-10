@@ -1832,17 +1832,17 @@
         padding: 8px 10px;
         gap: 6px;
       }
-      .chat-sidebar .chat-name-input,
+      .chat-sidebar .chat-name-select,
       .chat-sidebar .chat-msg-input {
-        font-size: 12px;
+        font-size: 11px;
         padding: 6px 8px;
       }
       .chat-sidebar .chat-send-btn {
         padding: 6px 10px;
         font-size: 12px;
       }
-      .chat-sidebar .chat-name-input {
-        width: 70px;
+      .chat-sidebar .chat-name-select {
+        width: 80px;
       }
     }
 
@@ -2002,7 +2002,7 @@
       background: white;
     }
 
-    .chat-name-input, .chat-msg-input {
+    .chat-name-select, .chat-msg-input {
       font-family: 'Inter', sans-serif;
       font-size: 13px;
       border: 1.5px solid var(--border);
@@ -2012,13 +2012,15 @@
       transition: border-color 0.2s;
     }
 
-    .chat-name-input:focus, .chat-msg-input:focus {
+    .chat-name-select:focus, .chat-msg-input:focus {
       border-color: var(--masters-green);
     }
 
-    .chat-name-input {
-      width: 90px;
+    .chat-name-select {
+      width: 100px;
       flex-shrink: 0;
+      background: white;
+      cursor: pointer;
     }
 
     .chat-msg-input {
@@ -2078,29 +2080,30 @@
     .chat-day-sep::before { left: 5%; }
     .chat-day-sep::after { right: 5%; }
 
-    .chat-name-wrap {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      flex-shrink: 0;
+    /* Admin chat messages */
+    .chat-msg-admin {
+      color: #b8860b !important;
     }
-    .chat-name-wrap.locked .chat-name-input {
-      background: #f0ebe0;
-      color: var(--text-muted);
-      border-color: transparent;
-      cursor: default;
-    }
-    .chat-name-change {
-      background: none;
-      border: none;
-      font-size: 12px;
-      cursor: pointer;
-      color: var(--text-muted);
-      padding: 2px 4px;
+    .chat-admin-tag {
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #b8860b;
+      color: white;
+      padding: 1px 4px;
       border-radius: 3px;
-      line-height: 1;
+      vertical-align: middle;
+      margin-left: 3px;
     }
-    .chat-name-change:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+    .admin-msg-row .chat-msg-text {
+      border-color: rgba(184,134,11,0.2);
+      background: rgba(184,134,11,0.05);
+    }
+    .admin-msg-row.own .chat-msg-text {
+      background: rgba(184,134,11,0.08);
+      border-color: rgba(184,134,11,0.2);
+    }
 
     .chat-scroll-btn {
       position: absolute;
