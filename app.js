@@ -1264,56 +1264,86 @@ function buildScorecardHtml(entry) {
     let outStrokes = 0, inStrokes = 0;
 
     html += `<div class="sc-round-content" data-sc-round="${r}" style="display:${display}">`;
-    html += '<table class="sc-table"><colgroup>';
+
+    // === DESKTOP: single full table (hidden on mobile) ===
+    html += '<table class="sc-table sc-desktop"><colgroup>';
     html += '<col class="sc-col-label">';
     for (let i = 0; i < 9; i++) html += '<col class="sc-col-hole">';
     html += '<col class="sc-col-sum">';
     for (let i = 0; i < 9; i++) html += '<col class="sc-col-hole">';
     html += '<col class="sc-col-sum"><col class="sc-col-tot">';
     html += '</colgroup>';
-
-    // Header: Hole numbers
     html += '<tr class="sc-header"><th class="sc-cell sc-label">Hull</th>';
     for (let h = 1; h <= 9; h++) html += `<th class="sc-cell">${h}</th>`;
     html += '<th class="sc-cell sc-out">UT</th>';
     for (let h = 10; h <= 18; h++) html += `<th class="sc-cell">${h}</th>`;
     html += '<th class="sc-cell sc-in">IN</th><th class="sc-cell sc-tot">TOT</th></tr>';
-
-    // Par row
     html += '<tr class="sc-par"><td class="sc-cell sc-label">Par</td>';
     for (let h = 0; h < 9; h++) html += `<td class="sc-cell">${AUGUSTA_PAR[h]}</td>`;
     html += `<td class="sc-cell sc-out">${AUGUSTA_OUT}</td>`;
     for (let h = 9; h < 18; h++) html += `<td class="sc-cell">${AUGUSTA_PAR[h]}</td>`;
     html += `<td class="sc-cell sc-in">${AUGUSTA_IN}</td><td class="sc-cell sc-tot">${AUGUSTA_TOTAL}</td></tr>`;
-
-    // Score row
     html += '<tr class="sc-score"><td class="sc-cell sc-label">Score</td>';
     for (let h = 1; h <= 9; h++) {
-      const holeScore = holes.find(x => x.hole === h);
-      if (holeScore) {
-        outStrokes += holeScore.strokes;
-        const cls = getHoleClass(holeScore.toPar);
-        html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${holeScore.strokes}</span>` : holeScore.strokes}</td>`;
-      } else {
-        html += '<td class="sc-cell">-</td>';
-      }
+      const hs = holes.find(x => x.hole === h);
+      if (hs) { outStrokes += hs.strokes; const cls = getHoleClass(hs.toPar); html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${hs.strokes}</span>` : hs.strokes}</td>`; }
+      else html += '<td class="sc-cell">-</td>';
     }
     html += `<td class="sc-cell sc-out">${outStrokes || '-'}</td>`;
     for (let h = 10; h <= 18; h++) {
-      const holeScore = holes.find(x => x.hole === h);
-      if (holeScore) {
-        inStrokes += holeScore.strokes;
-        const cls = getHoleClass(holeScore.toPar);
-        html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${holeScore.strokes}</span>` : holeScore.strokes}</td>`;
-      } else {
-        html += '<td class="sc-cell">-</td>';
-      }
+      const hs = holes.find(x => x.hole === h);
+      if (hs) { inStrokes += hs.strokes; const cls = getHoleClass(hs.toPar); html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${hs.strokes}</span>` : hs.strokes}</td>`; }
+      else html += '<td class="sc-cell">-</td>';
     }
     const totalStrokes = (outStrokes || 0) + (inStrokes || 0);
     html += `<td class="sc-cell sc-in">${inStrokes || '-'}</td>`;
     html += `<td class="sc-cell sc-tot">${totalStrokes || '-'}</td>`;
-    html += '</tr>'; // sc-score
-    html += '</table>'; // sc-table
+    html += '</tr></table>';
+
+    // === MOBILE: two stacked half-tables (hidden on desktop) ===
+    // Reset counters for mobile
+    let mOut = 0, mIn = 0;
+
+    // Front 9
+    html += '<div class="sc-mobile">';
+    html += '<table class="sc-table sc-half"><colgroup><col class="sc-col-label">';
+    for (let i = 0; i < 9; i++) html += '<col class="sc-col-hole">';
+    html += '<col class="sc-col-sum"></colgroup>';
+    html += '<tr class="sc-header"><th class="sc-cell sc-label">Hull</th>';
+    for (let h = 1; h <= 9; h++) html += `<th class="sc-cell">${h}</th>`;
+    html += '<th class="sc-cell sc-out">UT</th></tr>';
+    html += '<tr class="sc-par"><td class="sc-cell sc-label">Par</td>';
+    for (let h = 0; h < 9; h++) html += `<td class="sc-cell">${AUGUSTA_PAR[h]}</td>`;
+    html += `<td class="sc-cell sc-out">${AUGUSTA_OUT}</td></tr>`;
+    html += '<tr class="sc-score"><td class="sc-cell sc-label">Score</td>';
+    for (let h = 1; h <= 9; h++) {
+      const hs = holes.find(x => x.hole === h);
+      if (hs) { mOut += hs.strokes; const cls = getHoleClass(hs.toPar); html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${hs.strokes}</span>` : hs.strokes}</td>`; }
+      else html += '<td class="sc-cell">-</td>';
+    }
+    html += `<td class="sc-cell sc-out">${mOut || '-'}</td></tr></table>`;
+
+    // Back 9
+    html += '<table class="sc-table sc-half"><colgroup><col class="sc-col-label">';
+    for (let i = 0; i < 9; i++) html += '<col class="sc-col-hole">';
+    html += '<col class="sc-col-sum"><col class="sc-col-tot"></colgroup>';
+    html += '<tr class="sc-header"><th class="sc-cell sc-label">Hull</th>';
+    for (let h = 10; h <= 18; h++) html += `<th class="sc-cell">${h}</th>`;
+    html += '<th class="sc-cell sc-in">IN</th><th class="sc-cell sc-tot">TOT</th></tr>';
+    html += '<tr class="sc-par"><td class="sc-cell sc-label">Par</td>';
+    for (let h = 9; h < 18; h++) html += `<td class="sc-cell">${AUGUSTA_PAR[h]}</td>`;
+    html += `<td class="sc-cell sc-in">${AUGUSTA_IN}</td><td class="sc-cell sc-tot">${AUGUSTA_TOTAL}</td></tr>`;
+    html += '<tr class="sc-score"><td class="sc-cell sc-label">Score</td>';
+    for (let h = 10; h <= 18; h++) {
+      const hs = holes.find(x => x.hole === h);
+      if (hs) { mIn += hs.strokes; const cls = getHoleClass(hs.toPar); html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${hs.strokes}</span>` : hs.strokes}</td>`; }
+      else html += '<td class="sc-cell">-</td>';
+    }
+    const mTotal = (mOut || 0) + (mIn || 0);
+    html += `<td class="sc-cell sc-in">${mIn || '-'}</td>`;
+    html += `<td class="sc-cell sc-tot">${mTotal || '-'}</td>`;
+    html += '</tr></table></div>';
+
     html += '</div>'; // sc-round-content
   }
 
