@@ -1000,7 +1000,7 @@ function renderPickCards(challengers, results) {
       const ptsClass = d.roundPts > 0 ? 'has-pts' : 'no-pts';
 
       rowsHtml += `
-        <div class="pick-row ${rowClass}">
+        <div class="pick-row ${rowClass}" data-goto-player="${escAttr(d.name)}" style="cursor:pointer" title="Vis på leaderboard">
           <div class="pick-rank">${d.pickRank}</div>
           <div class="pick-player">
             <span class="flag">${info.flag}</span>
@@ -1054,6 +1054,28 @@ function renderPickCards(challengers, results) {
       toggle.textContent = isNowExpanded ? '▲' : '▼';
       card.classList.toggle('expanded', isNowExpanded);
       card.classList.toggle('collapsed', !isNowExpanded);
+    });
+  });
+
+  // Wire up player row clicks → scroll to leaderboard and highlight
+  container.querySelectorAll('.pick-row[data-goto-player]').forEach(row => {
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const playerName = row.dataset.gotoPlayer;
+      const lbRow = document.querySelector(`.lb-row[data-player="${CSS.escape(playerName)}"]`);
+      if (!lbRow) return;
+
+      // Scroll to leaderboard row
+      lbRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Highlight effect
+      lbRow.style.transition = 'background 0.3s';
+      lbRow.style.background = 'rgba(200, 169, 81, 0.3)';
+      setTimeout(() => {
+        lbRow.style.background = '';
+        // Also expand the scorecard if it's not already open
+        lbRow.click();
+      }, 800);
     });
   });
 }
