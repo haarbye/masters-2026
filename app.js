@@ -2014,3 +2014,146 @@ renderAdminPanel();
 setInterval(() => {
   if (!isRegistrationOpen()) renderRegistrationForm();
 }, 60000);
+
+// ============================================================
+// CHAT
+// ============================================================
+
+const CHAT_POLL_INTERVAL = 10000; // 10s
+let chatMessages = [];
+let chatLastId = 0;
+let chatMyName = localStorage.getItem('chatName') || '';
+
+function chatHtml(targetId) {
+  const isSidebar = targetId === 'chatDesktop';
+  return `
+    <div class="chat-header">
+      💬 Chat
+      <span class="chat-online" id="chatOnline-${targetId}"></span>
+    </div>
+    <div class="chat-messages" id="chatMsgs-${targetId}">
+      <div class="chat-empty">Ingen meldinger ennå — vær den første!</div>
+    </div>
+    <div class="chat-input-wrap">
+      <input type="text" class="chat-name-input" id="chatName-${targetId}" placeholder="Navn" maxlength="20" value="${esc(chatMyName)}">
+      <input type="text" class="chat-msg-input" id="chatInput-${targetId}" placeholder="Skriv en melding..." maxlength="500">
+      <button class="chat-send-btn" id="chatSend-${targetId}">Send</button>
+    </div>`;
+}
+
+function initChat() {
+  const mobile = document.getElementById('chatMobile');
+  const desktop = document.getElementById('chatDesktop');
+  if (mobile) mobile.innerHTML = chatHtml('chatMobile');
+  if (desktop) desktop.innerHTML = chatHtml('chatDesktop');
+
+  // Wire up both instances
+  ['chatMobile', 'chatDesktop'].forEach(id => {
+    const sendBtn = document.getElementById(`chatSend-${id}`);
+    const input = document.getElementById(`chatInput-${id}`);
+    const nameInput = document.getElementById(`chatName-${id}`);
+
+    if (!sendBtn) return;
+
+    sendBtn.addEventListener('click', () => sendChatMessage(id));
+    input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMessage(id); });
+
+    // Sync name between both inputs
+    nameInput?.addEventListener('input', () => {
+      chatMyName = nameInput.value.trim();
+      localStorage.setItem('chatName', chatMyName);
+      // Sync other input
+      const otherId = id === 'chatMobile' ? 'chatDesktop' : 'chatMobile';
+      const other = document.getElementById(`chatName-${otherId}`);
+      if (other) other.value = chatMyName;
+    });
+  });
+
+  // Start polling
+  fetchChatMessages();
+  setInterval(fetchChatMessages, CHAT_POLL_INTERVAL);
+}
+
+async function fetchChatMessages() {
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/chat_messages?select=id,name,message,created_at&order=created_at.asc&limit=200`,
+      { headers: SB_HEADERS }
+    );
+    if (!resp.ok) return;
+    const msgs = await resp.json();
+    if (!msgs.length && !chatMessages.length) return;
+
+    const newMsgs = msgs.filter(m => m.id > chatLastId);
+    chatMessages = msgs;
+    if (msgs.length > 0) chatLastId = msgs[msgs.length - 1].id;
+
+    renderChatMessages();
+
+    // Auto-scroll if new messages
+    if (newMsgs.length > 0) {
+      ['chatMobile', 'chatDesktop'].forEach(id => {
+        const el = document.getElementById(`chatMsgs-${id}`);
+        if (el) el.scrollTop = el.scrollHeight;
+      });
+    }
+  } catch (err) { console.error('Chat fetch error:', err); }
+}
+
+function renderChatMessages() {
+  const html = chatMessages.length === 0
+    ? '<div class="chat-empty">Ingen meldinger ennå — vær den første!</div>'
+    : chatMessages.map(m => {
+      const isOwn = m.name.toLowerCase() === chatMyName.toLowerCase();
+      const time = new Date(m.created_at).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+      const day = new Date(m.created_at).toLocaleDateString('no-NO', { weekday: 'short' });
+      return `<div class="chat-msg ${isOwn ? 'own' : ''}">
+        <div class="chat-msg-header">
+          <span class="chat-msg-name">${esc(m.name)}</span>
+          <span class="chat-msg-time">${day} ${time}</span>
+        </div>
+        <div class="chat-msg-text">${esc(m.message)}</div>
+      </div>`;
+    }).join('');
+
+  ['chatMobile', 'chatDesktop'].forEach(id => {
+    const el = document.getElementById(`chatMsgs-${id}`);
+    if (el) el.innerHTML = html;
+  });
+}
+
+async function sendChatMessage(sourceId) {
+  const nameInput = document.getElementById(`chatName-${sourceId}`);
+  const msgInput = document.getElementById(`chatInput-${sourceId}`);
+  const sendBtn = document.getElementById(`chatSend-${sourceId}`);
+
+  const name = (nameInput?.value || '').trim();
+  const message = (msgInput?.value || '').trim();
+
+  if (!name || name.length < 2) { nameInput?.focus(); return; }
+  if (!message) { msgInput?.focus(); return; }
+
+  chatMyName = name;
+  localStorage.setItem('chatName', chatMyName);
+
+  sendBtn.disabled = true;
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages`, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ name, message }),
+    });
+
+    if (!resp.ok) throw new Error('Send failed');
+
+    msgInput.value = '';
+    await fetchChatMessages();
+  } catch (err) {
+    console.error('Chat send error:', err);
+  } finally {
+    sendBtn.disabled = false;
+    msgInput?.focus();
+  }
+}
+
+initChat();
