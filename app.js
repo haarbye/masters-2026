@@ -490,6 +490,51 @@ function getProjectedCutScore(leaderboard) {
 }
 
 // ============================================================
+// DISMISSABLE NEWS + RANKING CHANGE TRACKING
+// ============================================================
+
+// News dismiss
+function dismissNews() {
+  const banner = document.getElementById('newsBanner');
+  if (!banner) return;
+  const newsId = banner.dataset.newsId || 'default';
+  localStorage.setItem('dismissed_' + newsId, '1');
+  banner.style.display = 'none';
+}
+
+(function checkNewsDismissed() {
+  const banner = document.getElementById('newsBanner');
+  if (!banner) return;
+  const newsId = banner.dataset.newsId || 'default';
+  if (localStorage.getItem('dismissed_' + newsId)) {
+    banner.style.display = 'none';
+  }
+})();
+
+// Ranking position change tracking
+const RANK_HISTORY_KEY = 'masters2026_last_rankings';
+
+function getLastRankings() {
+  try { return JSON.parse(localStorage.getItem(RANK_HISTORY_KEY)) || {}; } catch { return {}; }
+}
+
+function saveRankings(ranked) {
+  const data = {};
+  ranked.forEach((r, idx) => { data[r.name] = idx + 1; });
+  localStorage.setItem(RANK_HISTORY_KEY, JSON.stringify(data));
+}
+
+function getRankChange(name, currentPos, lastRankings) {
+  if (!lastRankings || Object.keys(lastRankings).length === 0) return '';
+  const prev = lastRankings[name];
+  if (prev === undefined) return '<span class="rank-change new-entry">NY</span>';
+  const diff = prev - currentPos; // positive = moved up
+  if (diff > 0) return `<span class="rank-change up">▲${diff}</span>`;
+  if (diff < 0) return `<span class="rank-change down">▼${Math.abs(diff)}</span>`;
+  return '';
+}
+
+// ============================================================
 // RENDER FUNCTIONS
 // ============================================================
 
@@ -508,12 +553,14 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
   })).sort((a, b) => b.total - a.total);
 
   const maxPts = Math.max(...ranked.map(r => r.total), 1);
+  const lastRankings = getLastRankings();
 
   let html = '';
   ranked.forEach((r, idx) => {
     const medal = `${idx + 1}.`;
     const barWidth = Math.round((r.total / maxPts) * 100);
     const lead = idx === 0 ? '' : ` (${r.total - ranked[0].total})`;
+    const changeHtml = getRankChange(r.name, idx + 1, lastRankings);
 
     const rowClass = idx === 0 ? 'rank-gold' : idx === 1 ? 'rank-silver' : idx === 2 ? 'rank-bronze' : '';
 
@@ -523,7 +570,7 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
         <div class="rank-main">
           <div class="rank-name">
             <span class="rank-dot" style="background:${r.color.dot}"></span>
-            ${esc(r.name)}
+            ${esc(r.name)}${changeHtml}
           </div>
           <div class="rank-bar-wrap">
             <div class="rank-bar" style="width:${barWidth}%;background:${r.color.dot}"></div>
@@ -539,6 +586,9 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
   });
 
   container.innerHTML = html;
+
+  // Save current positions (delayed so user sees changes first)
+  setTimeout(() => saveRankings(ranked), 5000);
 }
 
 // ============================================================
@@ -1273,8 +1323,8 @@ function renderLeaderboard(leaderboard, challengers) {
             ${entry.headshotUrl ? `<img class="lb-headshot" src="${entry.headshotUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
             <span class="flag">${flagEmoji}</span>
             <span class="name">${esc(entry.name)}</span>
-            ${statusBadge}
             <span class="picked-by">${dots}</span>
+            ${statusBadge}
           </div>
           <div class="lb-status-mobile" style="display:none">${mobileStatus}</div>
           <div class="lb-round text-center">${entry.rounds[1] || '-'}</div>

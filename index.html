@@ -1338,11 +1338,11 @@
       .lb-pos { font-size: 12px; }
       .lb-total { font-size: 15px; font-weight: 800; line-height: 1.3; }
       .lb-thru-inline { display: block; font-size: 10px; font-weight: 600; color: var(--text-muted); }
-      /* Dots on own line under name */
+      /* Dots on own line under name on mobile */
       .lb-player .picked-by { width: 100%; margin-left: 0; margin-top: -1px; }
-      /* Tee time / LIVE inline after name on mobile */
+      /* Hide tee time/LIVE from player cell on mobile (shown in mobile status cell instead) */
       .lb-player .lb-live-inline,
-      .lb-player .lb-tee-time { font-size: 9px; margin-left: 4px; }
+      .lb-player .lb-tee-time { display: none; }
 
       /* Scorecard */
       .lb-scorecard { padding: 12px 10px 16px; }
@@ -1601,6 +1601,35 @@
     }
 
     .news-banner strong { color: #991b1b; }
+    .news-banner { position: relative; padding-right: 36px; }
+    .news-dismiss {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #991b1b;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      opacity: 0.6;
+    }
+    .news-dismiss:hover { opacity: 1; }
+
+    /* Ranking position change indicators */
+    .rank-change {
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 1px;
+    }
+    .rank-change.up { color: #16a34a; }
+    .rank-change.down { color: #dc2626; }
+    .rank-change.new-entry { color: var(--masters-gold); font-style: italic; }
 
     .leader-quote {
       background: #fff;
@@ -2037,9 +2066,10 @@
   </div>
 
   <div class="container">
-    <!-- News banner -->
-    <div class="news-banner">
+    <!-- News banner (dismissable) -->
+    <div class="news-banner" id="newsBanner" data-news-id="news-reg-reopen-2">
       <strong>Nyhet:</strong> Registrering er gjenåpnet frem til kl. 18:00! Nye spillere kan maks velge 2 av nåværende topp 10 — og starter uten torsdagspoeng. Spill med hjertet!
+      <button class="news-dismiss" onclick="dismissNews()" title="Lukk">&times;</button>
     </div>
 
     <!-- Leader quote -->
