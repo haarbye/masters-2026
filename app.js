@@ -670,6 +670,7 @@ function renderScoreChart() {
   }
 
   // Draw lines per challenger (smooth bezier curves)
+  const endpoints = []; // collect for label de-overlap
   names.forEach((name, ni) => {
     const color = getColor(lastChallengers.findIndex(c => c.name === name));
     const points = [];
@@ -706,12 +707,23 @@ function renderScoreChart() {
     ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Label at endpoint
-    ctx.fillStyle = color.dot;
+    endpoints.push({ name, x: last.x, y: last.y, color: color.dot });
+  });
+
+  // Draw labels with de-overlap (spread vertically if too close)
+  endpoints.sort((a, b) => a.y - b.y);
+  const LABEL_H = 13;
+  for (let i = 1; i < endpoints.length; i++) {
+    if (endpoints[i].y - endpoints[i - 1].y < LABEL_H) {
+      endpoints[i].y = endpoints[i - 1].y + LABEL_H;
+    }
+  }
+  for (const ep of endpoints) {
+    ctx.fillStyle = ep.color;
     ctx.font = 'bold 11px Inter, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(name, last.x + 8, last.y + 4);
-  });
+    ctx.fillText(ep.name, ep.x + 8, ep.y + 4);
+  }
 
   // Legend
   if (legendEl) {
@@ -727,8 +739,10 @@ loadScoreHistory();
 
 // Inject scoring adjustment event marker if not already present
 (function injectScoringEvent() {
-  const eventTime = new Date('2026-04-10T09:00:00+02:00').getTime();
-  if (!scoreHistory.some(s => s.event === 'Poengjustering')) {
+  const eventTime = new Date('2026-04-10T09:20:00+02:00').getTime();
+  // Remove old marker if exists at wrong time, then re-insert
+  scoreHistory = scoreHistory.filter(s => s.event !== 'Poengjustering');
+  if (true) {
     // Insert at the right chronological position
     const idx = scoreHistory.findIndex(s => s.time >= eventTime);
     const entry = { time: eventTime, scores: {}, event: 'Poengjustering' };
