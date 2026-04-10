@@ -241,22 +241,18 @@ function getFlagEmoji(countryAlt) {
 
 // --- Calculate points ---
 //
-// MAKS 4 PICKS KAN SCORE TOPP-10 POENG PER RUNDE
-//
 // R1–R3 (torsdag–lørdag):
-//   Topp 10: R1=1p, R2=2p, R3=3p  (maks 4 picks)
+//   Topp 10: R1=1p, R2=2p, R3=3p
 //   Eksakt plassering bonus: R1=+2p, R2=+3p, R3=+5p
 //   CUT: -2p (slår inn etter fredag)
 //
 // R4 (søndag) — full pott:
-//   Eksakt riktig plass:  #1=35p  #2=15p  #3=10p  #4–10=4p  (maks 4 picks)
+//   Eksakt riktig plass:  #1=35p  #2=15p  #3=10p  #4–10=4p
 //   Valgt vinner, endte på pall: 10p
 //   Valgt pall, endte i topp 10: 5p
 //   I topp 10, feil plass: 5p
 //   DQ: -2p
 //   Alle 3 pallplasser riktige: +25 bonus
-
-const MAX_TOP10_PICKS = 4; // Maks antall picks som kan score topp-10 poeng
 
 const CUT_PENALTY = -2;
 const EXACT_POS_BONUS = { 1: 1, 2: 2, 3: 4, 4: 4 }; // bonus for exact top-10 position per round
@@ -322,31 +318,7 @@ function calcRoundPoints(picks, leaderboard, roundNum) {
     }
 
     details.push({ pickRank: pickSlot, name: picks[i], leaderboardPos: pos, score, thru, roundPts: pts, isCut, isDQ: match?.isDQ || false });
-  }
-
-  // === MAKS 4 PICKS KAN SCORE TOPP-10 POENG ===
-  // Finn alle picks som fikk topp-10 poeng (positive poeng, ikke cut/DQ)
-  const top10Indices = [];
-  for (let i = 0; i < details.length; i++) {
-    const d = details[i];
-    if (d.leaderboardPos !== null && d.leaderboardPos <= 10 && d.roundPts > 0) {
-      top10Indices.push(i);
-    }
-  }
-  if (top10Indices.length > MAX_TOP10_PICKS) {
-    // Sorter etter poeng (høyest først), behold kun de 4 beste
-    top10Indices.sort((a, b) => details[b].roundPts - details[a].roundPts);
-    const toZero = top10Indices.slice(MAX_TOP10_PICKS);
-    for (const idx of toZero) {
-      details[idx].roundPts = 0;
-      details[idx].cappedByRule = true; // Marker at denne ble nullet av regelen
-      hits--; // Juster hits-tellingen
-    }
-  }
-
-  // Summer poeng
-  for (const d of details) {
-    total += d.roundPts;
+    total += pts;
   }
 
   // === SØNDAGS-BONUS: Alle 3 pallplasser riktige ===
@@ -1620,9 +1592,24 @@ function validateForm() {
     }
   });
 
+  // Sjekk maks 4 topp-10 picks
+  const MAX_TOP10_REG = 4;
+  const top10Count = picks.filter(p => {
+    const match = findPlayerOnLeaderboard(p, leaderboardData);
+    return match && typeof match.position === 'number' && match.position <= 10;
+  }).length;
+  const top10Ok = top10Count <= MAX_TOP10_REG;
+
+  const errEl = document.getElementById('regError');
+  if (errEl) {
+    errEl.textContent = (!top10Ok && allConfirmed && picks.length === 10)
+      ? `Maks ${MAX_TOP10_REG} spillere i nåværende topp 10! Du har valgt ${top10Count}.`
+      : '';
+  }
+
   const btn = document.getElementById('regSubmit');
   if (btn) {
-    btn.disabled = !(name && name.length >= 2 && allConfirmed && picks.length === 10);
+    btn.disabled = !(name && name.length >= 2 && allConfirmed && picks.length === 10 && top10Ok);
   }
 }
 
@@ -1648,6 +1635,16 @@ async function submitRegistration() {
   const uniquePicks = new Set(picks.map(p => p.toLowerCase()));
   if (uniquePicks.size !== 10) {
     document.getElementById('regError').textContent = 'Kan ikke velge samme spiller flere ganger!';
+    return;
+  }
+
+  // Maks 4 spillere fra nåværende topp 10
+  const top10Count = picks.filter(p => {
+    const match = findPlayerOnLeaderboard(p, leaderboardData);
+    return match && typeof match.position === 'number' && match.position <= 10;
+  }).length;
+  if (top10Count > 4) {
+    document.getElementById('regError').textContent = `Maks 4 spillere i nåværende topp 10! Du har valgt ${top10Count}.`;
     return;
   }
 
