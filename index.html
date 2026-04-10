@@ -20,6 +20,9 @@
       --border-light: #e8dece;
       --positive: #006747;
       --negative: #c0392b;
+      --section-gap: 24px;
+      --card-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --card-shadow-hover: 0 4px 16px rgba(0,0,0,0.10);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -182,8 +185,10 @@
       background: var(--card);
       border: 2px solid var(--border);
       border-radius: 2px;
-      margin-bottom: 28px;
+      margin-bottom: var(--section-gap);
       overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: box-shadow 0.3s ease;
     }
 
     .ranking-card-header {
@@ -227,8 +232,8 @@
       transition: all 0.2s;
     }
 
-    .ranking-tab:hover { color: rgba(255,255,255,0.9); }
-    .ranking-tab.active { background: rgba(255,255,255,0.25); color: white; }
+    .ranking-tab:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.08); }
+    .ranking-tab.active { background: rgba(255,255,255,0.25); color: white; box-shadow: 0 1px 0 var(--masters-gold); }
 
     .ranking-views { position: relative; }
     .ranking-view { display: none; }
@@ -296,7 +301,8 @@
     .rank-bar {
       height: 100%;
       border-radius: 2px;
-      transition: width 0.6s ease;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      animation: barGrow 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
     }
 
     .rank-stats {
@@ -328,6 +334,13 @@
       border-radius: 2px;
       padding: 14px;
       text-align: center;
+      box-shadow: var(--card-shadow);
+      transition: box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    .round-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-1px);
     }
 
     .round-card.active-round {
@@ -356,8 +369,9 @@
       background: var(--card);
       border: 2px solid var(--masters-gold);
       border-radius: 2px;
-      margin-bottom: 28px;
+      margin-bottom: var(--section-gap);
       overflow: hidden;
+      box-shadow: var(--card-shadow);
     }
 
     .reg-header {
@@ -535,6 +549,7 @@
       border: 2px solid var(--border);
       border-radius: 2px;
       overflow: hidden;
+      box-shadow: var(--card-shadow);
     }
 
     .key-num {
@@ -563,6 +578,7 @@
       border: 2px solid var(--border);
       border-radius: 2px;
       padding: 16px;
+      box-shadow: var(--card-shadow);
     }
 
     .chart-title {
@@ -727,6 +743,13 @@
       border: 2px solid var(--border);
       border-radius: 2px;
       overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    .pick-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-2px);
     }
 
     .pick-card-header {
@@ -787,6 +810,7 @@
       border-bottom: 1px solid #f0ebe0;
     }
 
+    .pick-row { transition: background 0.15s ease; }
     .pick-row:last-child { border-bottom: none; }
     .pick-row.in-top10 { background: #f0f8f0; }
     .pick-row.in-top3 { background: #ddf0dd; }
@@ -832,7 +856,7 @@
 
     /* Collapsible sections */
     .collapsible-section {
-      margin-bottom: 24px;
+      margin-bottom: var(--section-gap);
     }
 
     .collapsible-header {
@@ -852,14 +876,20 @@
       border-radius: 2px;
       border: 2px solid var(--masters-green);
       margin-bottom: 14px;
-      transition: margin 0.2s, border-radius 0.2s;
+      box-shadow: var(--card-shadow);
+      transition: margin 0.2s, border-radius 0.2s, transform 0.15s ease, box-shadow 0.2s ease;
     }
 
-    .collapsible-header:hover { opacity: 0.92; }
+    .collapsible-header:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-1px); }
 
     .collapsible-header .toggle-icon {
       font-size: 12px;
       opacity: 0.7;
+      transition: transform 0.3s ease;
+    }
+
+    .collapsible-section.collapsed .collapsible-header .toggle-icon {
+      transform: rotate(180deg);
     }
 
     .collapsible-section.collapsed .collapsible-header {
@@ -875,6 +905,7 @@
       border: 2px solid var(--border);
       border-radius: 2px;
       overflow: hidden;
+      box-shadow: var(--card-shadow);
     }
 
     .lb-header {
@@ -897,7 +928,7 @@
       border-bottom: 1px solid #f0ebe0;
     }
 
-    .lb-row:hover { background: #fafaf5; }
+    .lb-row:hover { background: #fafaf5; transition: background 0.15s ease; }
     .lb-row:last-child { border-bottom: none; }
     .lb-row.highlighted { background: #fef9e7; }
 
@@ -911,6 +942,13 @@
       object-fit: cover;
       border: 1.5px solid var(--border);
       flex-shrink: 0;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      background: var(--bg);
+    }
+
+    .lb-row:hover .lb-headshot {
+      transform: scale(1.08);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
 
     .lb-player .flag { font-size: 18px; }
@@ -1208,7 +1246,8 @@
       border: 2px solid var(--border);
       border-radius: 2px;
       padding: 24px;
-      margin-bottom: 28px;
+      margin-bottom: var(--section-gap);
+      box-shadow: var(--card-shadow);
     }
 
     .scoring-card h3 {
@@ -1225,7 +1264,8 @@
       gap: 12px;
     }
 
-    .scoring-item { padding: 10px 14px; background: var(--bg); border-radius: 2px; border: 1px solid var(--border-light); }
+    .scoring-item { padding: 10px 14px; background: var(--bg); border-radius: 2px; border: 1px solid var(--border-light); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .scoring-item:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
     .scoring-item .label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
     .scoring-item .value { font-size: 15px; font-weight: 700; }
 
@@ -1250,12 +1290,14 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes barGrow { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
 
     .score-bump { animation: bump 0.4s ease; }
     @keyframes bump { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
     /* Rank change animations */
-    .rank-row { transition: background 0.3s ease; }
+    .rank-row { transition: background 0.3s ease, transform 0.15s ease; }
+    .rank-row:hover { background: rgba(200,169,81,0.06); }
     .rank-up { animation: slideUp 0.5s ease; }
     .rank-down { animation: slideDown 0.5s ease; }
 
@@ -1270,6 +1312,39 @@
     }
 
     .text-center { text-align: center; }
+
+    /* ===== NEWS BANNER ===== */
+    .news-banner {
+      background: #fff;
+      border: 2px solid #dc2626;
+      border-radius: 2px;
+      padding: 14px 18px;
+      margin-bottom: var(--section-gap);
+      font-size: 13px;
+      color: #dc2626;
+      line-height: 1.6;
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideIn 0.5s ease;
+    }
+
+    .news-banner strong { color: #991b1b; }
+
+    /* ===== ENTRANCE ANIMATIONS ===== */
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ranking-card,
+    .collapsible-section,
+    .scoring-card,
+    .reg-card {
+      animation: fadeSlideIn 0.4s ease backwards;
+    }
+
+    .collapsible-section:nth-child(2) { animation-delay: 0.05s; }
+    .collapsible-section:nth-child(3) { animation-delay: 0.1s; }
+    .collapsible-section:nth-child(4) { animation-delay: 0.15s; }
 
     /* ===== ADMIN PANEL ===== */
     .admin-card {
@@ -1400,8 +1475,8 @@
 
   <div class="container">
     <!-- News banner -->
-    <div style="background:#fff;border:1px solid #dc2626;border-radius:2px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#dc2626;line-height:1.5">
-      <strong style="color:#991b1b">Nyhet:</strong> Poengsystemet er justert — topp 10-treff gir nå flere poeng, mens eksakt plassering-bonus er redusert. Torsdagens resultater er rekalkulert. Endringen kommer etter klager fra Håvard Kvernaas Bakken. Registrering er åpen for nye spillere frem til kl. 13:40 — de starter uten torsdagspoeng.
+    <div class="news-banner">
+      <strong>Nyhet:</strong> Poengsystemet er justert — topp 10-treff gir nå flere poeng, mens eksakt plassering-bonus er redusert. Torsdagens resultater er rekalkulert. Endringen kommer etter klager fra Håvard Kvernaas Bakken. Registrering er åpen for nye spillere frem til kl. 13:40 — de starter uten torsdagspoeng.
     </div>
 
     <!-- Ranking + Chart swipeable -->
@@ -1470,7 +1545,7 @@
     <div id="registrationSection"></div>
 
     <!-- Scoring -->
-    <div class="scoring-card" style="margin-bottom:24px">
+    <div class="scoring-card">
       <h3>Poengsystem</h3>
       <div style="margin-bottom:18px">
         <div style="font-size:13px;font-weight:700;color:var(--masters-green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Torsdag – Lørdag (R1–R3)</div>
