@@ -48,6 +48,17 @@
     .header-banner {
       width: 100%;
       display: block;
+      object-fit: cover;
+      object-position: center 45%;
+      height: 160px;
+    }
+
+    @media (min-width: 768px) {
+      .header-banner { height: 220px; }
+    }
+
+    @media (min-width: 1200px) {
+      .header-banner { height: 280px; }
     }
 
     .header h1 { display: none; }
@@ -164,6 +175,17 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ranking-card-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('rory.png') center 20% / cover no-repeat;
+      opacity: 0.2;
+      pointer-events: none;
     }
 
     /* Ranking tabs */
@@ -1208,7 +1230,6 @@
 
       /* Header */
       .header { padding: 0 0 8px; }
-      .header h1 { display: none; }
       .header .subtitle { font-size: 12px; }
       .tournament-info { flex-wrap: wrap; gap: 6px; font-size: 10px; }
       .container { padding: 12px 8px; }
@@ -1292,7 +1313,6 @@
     }
 
     @media (max-width: 400px) {
-      .header h1 { display: none; }
       .header { padding: 0 0 6px; }
       .rank-row { grid-template-columns: 30px 1fr auto; padding: 8px; }
       .rank-bar-wrap { display: none; }
@@ -1642,7 +1662,7 @@
 </head>
 <body>
   <div class="header">
-    <img src="masters-banner.webp" alt="Masters" class="header-banner">
+    <img src="masters-header-hd.webp" alt="Masters" class="header-banner">
     <div class="tournament-info">
       <span>Augusta National Golf Club</span>
       <span>|</span>
