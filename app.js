@@ -2225,26 +2225,34 @@ function initChat() {
     sendBtn.addEventListener('click', () => sendChatMessage(id));
     input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMessage(id); });
 
-    // Sync name select between both instances + claim name
+    // Sync name select between both instances + claim name with confirmation
     nameSelect?.addEventListener('change', async () => {
-      chatMyName = nameSelect.value;
+      const chosen = nameSelect.value;
+      if (!chosen) return;
+
+      const confirmed = confirm(`Er du sikker på at du vil chatte som "${chosen}"?\n\nDu vil ikke kunne bytte navn etterpå, og ingen andre vil kunne bruke dette navnet.`);
+      if (!confirmed) {
+        // Reset dropdown to placeholder
+        nameSelect.value = '';
+        return;
+      }
+
+      chatMyName = chosen;
       localStorage.setItem('chatName', chatMyName);
       const otherId = id === 'chatMobile' ? 'chatDesktop' : 'chatMobile';
       const other = document.getElementById(`chatName-${otherId}`);
       if (other) other.value = chatMyName;
       // Claim name by sending a hidden system message (locks session_id in DB)
-      if (chatMyName) {
-        try {
-          const payload = { name: chatMyName, message: '__claim__', session_id: chatSessionId };
-          if (chatMyName === CHAT_ADMIN_NAME && isAdmin()) payload.admin_token = 'guttorm-er-sansen-2026';
-          await fetch(`${SUPABASE_URL}/rest/v1/chat_messages`, {
-            method: 'POST',
-            headers: { ...SB_HEADERS, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          await fetchChatMessages();
-        } catch (e) { console.error('Claim failed:', e); }
-      }
+      try {
+        const payload = { name: chatMyName, message: '__claim__', session_id: chatSessionId };
+        if (chatMyName === CHAT_ADMIN_NAME && isAdmin()) payload.admin_token = 'guttorm-er-sansen-2026';
+        await fetch(`${SUPABASE_URL}/rest/v1/chat_messages`, {
+          method: 'POST',
+          headers: { ...SB_HEADERS, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        await fetchChatMessages();
+      } catch (e) { console.error('Claim failed:', e); }
     });
 
     // Scroll detection for "new messages" button
