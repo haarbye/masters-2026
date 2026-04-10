@@ -2127,7 +2127,8 @@ function getChatNameOptions() {
 function updateChatNameDropdowns() {
   const options = getChatNameOptions();
   if (options.length === 0) return;
-  const optionsHtml = `<option value="" disabled ${!chatMyName ? 'selected' : ''}>Velg navn</option>` +
+  const hasValidName = chatMyName && options.includes(chatMyName);
+  const optionsHtml = `<option value="" disabled ${!hasValidName ? 'selected' : ''}>Velg navn</option>` +
     options.map(n => `<option value="${escAttr(n)}" ${n === chatMyName ? 'selected' : ''}>${esc(n)}</option>`).join('');
   ['chatMobile', 'chatDesktop'].forEach(id => {
     const sel = document.getElementById(`chatName-${id}`);
@@ -2137,8 +2138,9 @@ function updateChatNameDropdowns() {
 
 function chatHtml(targetId) {
   const options = getChatNameOptions();
+  const hasValidName = chatMyName && options.includes(chatMyName);
   const optionsHtml = options.length > 0
-    ? `<option value="" disabled ${!chatMyName ? 'selected' : ''}>Velg navn</option>` +
+    ? `<option value="" disabled ${!hasValidName ? 'selected' : ''}>Velg navn</option>` +
       options.map(n => `<option value="${escAttr(n)}" ${n === chatMyName ? 'selected' : ''}>${esc(n)}</option>`).join('')
     : '<option value="" disabled selected>Laster...</option>';
 
