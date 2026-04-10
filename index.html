@@ -48,8 +48,7 @@
     .header-banner {
       width: 100%;
       display: block;
-      object-fit: cover;
-      max-height: 200px;
+      object-fit: contain;
     }
 
     .header h1 { display: none; }
@@ -347,6 +346,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .reg-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('header_1.jpg') center / cover no-repeat;
+      opacity: 0.2;
+      pointer-events: none;
     }
 
     .reg-header h3 {
@@ -844,6 +854,17 @@
       margin-bottom: 14px;
       box-shadow: var(--card-shadow);
       transition: margin 0.2s, border-radius 0.2s, transform 0.15s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .collapsible-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('header_1.jpg') center / cover no-repeat;
+      opacity: 0.2;
+      pointer-events: none;
     }
 
     .collapsible-header:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-1px); }
