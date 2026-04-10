@@ -73,7 +73,7 @@ const FLAG_MAP = {
 const BUILTIN_NAMES = new Set(['havard', 'sebastian']); // protected from deletion
 
 // --- Registration deadline ---
-const REGISTRATION_DEADLINE = new Date('2026-04-10T13:40:00+02:00');
+const REGISTRATION_DEADLINE = new Date('2026-04-10T18:00:00+02:00');
 // Late registrants (registered on or after this date) skip round 1 points
 const LATE_REG_CUTOFF = new Date('2026-04-10T00:00:00+02:00');
 
@@ -1456,7 +1456,7 @@ function renderRegistrationForm() {
           <input type="text" id="regName" placeholder="Ditt navn" class="reg-input" maxlength="20" />
         </div>
         <div style="background:#fef2f2;border:1px solid #dc2626;border-radius:2px;padding:10px 14px;margin:0 0 12px;font-size:12px;color:#991b1b;line-height:1.4">
-          <strong>OBS!</strong> Sen-registrering gir ingen poeng for torsdag. Du har sett resultatene og MÅ SPILLE MED HJERTE — ikke bare velge spillerne som leder!<br><strong>Du kan maks velge 4 spillere som er i nåværende topp 10.</strong>
+          <strong>OBS!</strong> Sen-registrering gir ingen poeng for torsdag. Du har sett resultatene og MÅ SPILLE MED HJERTE — ikke bare velge spillerne som leder!<br><strong>Du kan maks velge 2 spillere som er i nåværende topp 10.</strong>
         </div>
         <div class="reg-picks-grid" id="regPicksGrid"></div>
         <div class="reg-actions">
@@ -1593,7 +1593,7 @@ function validateForm() {
   });
 
   // Sjekk maks 4 topp-10 picks
-  const MAX_TOP10_REG = 4;
+  const MAX_TOP10_REG = 2;
   const top10Count = picks.filter(p => {
     const match = findPlayerOnLeaderboard(p, leaderboardData);
     return match && typeof match.position === 'number' && match.position <= 10;
@@ -1643,8 +1643,8 @@ async function submitRegistration() {
     const match = findPlayerOnLeaderboard(p, leaderboardData);
     return match && typeof match.position === 'number' && match.position <= 10;
   }).length;
-  if (top10Count > 4) {
-    document.getElementById('regError').textContent = `Maks 4 spillere i nåværende topp 10! Du har valgt ${top10Count}.`;
+  if (top10Count > 2) {
+    document.getElementById('regError').textContent = `Maks 2 spillere i nåværende topp 10! Du har valgt ${top10Count}.`;
     return;
   }
 
