@@ -1200,9 +1200,6 @@ function renderLeaderboard(leaderboard, challengers) {
   // Projected cut line
   const projectedCut = currentRound <= 2 ? getProjectedCutScore(leaderboard) : null;
 
-  // Group tee times for separator headers
-  let lastTeeTimeLabel = null;
-
   let html = '';
   let cutLineInserted = false;
 
@@ -1246,13 +1243,9 @@ function renderLeaderboard(leaderboard, challengers) {
 
     const isLive = entry.thru && entry.thru !== '-' && entry.thru !== 'F' && entry.thru !== '';
 
-    // Tee time separator — insert when tee time changes for not-yet-started players
+    // Tee time for players not yet started
     const tt = teeTimeData[entry.athleteId];
-    const teeTimeLabel = (!isLive && entry.thru === '-' && tt) ? formatTeeTime(tt.teeTime) : null;
-    if (teeTimeLabel && teeTimeLabel !== lastTeeTimeLabel && lbSortField === 'position') {
-      html += `<div class="lb-tee-time-header"><span>🕐 Tee time: ${teeTimeLabel}</span></div>`;
-      lastTeeTimeLabel = teeTimeLabel;
-    }
+    const teeTimeStr = (!isLive && entry.thru === '-' && tt) ? formatTeeTime(tt.teeTime) : '';
 
     html += `
       <div class="lb-entry ${highlight}">
@@ -1263,6 +1256,7 @@ function renderLeaderboard(leaderboard, challengers) {
             <span class="flag">${flagEmoji}</span>
             <span class="name">${esc(entry.name)}</span>
             <span class="picked-by">${dots}</span>
+            ${teeTimeStr ? `<span class="lb-tee-time">⛳ ${teeTimeStr}</span>` : ''}
           </div>
           <div class="lb-round text-center">${entry.rounds[1] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[2] || '-'}</div>
