@@ -803,9 +803,9 @@ function renderPickCards(challengers, results) {
 
   // All cards open by default (collapsedCards tracks which are closed)
 
-  // Sort by name alphabetically, keeping original index for color
+  // Sort by total points descending, keeping original index for color
   const indexed = challengers.map((c, i) => ({ challenger: c, result: results[i], origIdx: i }));
-  indexed.sort((a, b) => a.challenger.name.localeCompare(b.challenger.name, 'no'));
+  indexed.sort((a, b) => b.result.total - a.result.total);
 
   let html = '';
 
