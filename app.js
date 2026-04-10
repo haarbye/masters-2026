@@ -441,8 +441,9 @@ function parseESPNData(data) {
 // RENDER FUNCTIONS
 // ============================================================
 
-function renderRanking(challengers, results) {
+function renderRanking(challengers, results, resultsByRound, currentRound) {
   const container = document.getElementById('rankingTable');
+  const RNAMES = { 1: 'R1', 2: 'R2', 3: 'R3', 4: 'R4' };
 
   // Sort by total points descending
   const ranked = challengers.map((c, i) => ({
@@ -451,6 +452,7 @@ function renderRanking(challengers, results) {
     total: results[i].total,
     hits: results[i].hits,
     exactMatches: results[i].details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10).length,
+    roundPts: Object.keys(resultsByRound || {}).map(r => ({ round: +r, pts: (resultsByRound[r] || [])[i] || 0 })),
   })).sort((a, b) => b.total - a.total);
 
   const maxPts = Math.max(...ranked.map(r => r.total), 1);
@@ -478,6 +480,7 @@ function renderRanking(challengers, results) {
         <div class="rank-stats">
           <span class="rank-hits">${r.hits} i top 10</span>
           ${r.exactMatches > 0 ? `<span class="rank-exact">${r.exactMatches} eksakt</span>` : ''}
+          ${r.roundPts.length > 0 ? `<span class="rank-rounds">${r.roundPts.map(rp => `${RNAMES[rp.round]}: ${rp.pts >= 0 ? '+' : ''}${rp.pts}`).join(' · ')}</span>` : ''}
         </div>
         <div class="rank-pts" style="color:${r.color.text}">${r.total}<span class="rank-pts-label"> pts</span>${lead ? `<span class="rank-diff">${lead}</span>` : ''}</div>
       </div>`;
@@ -1770,7 +1773,7 @@ async function updateDashboard() {
     // Render everything
     renderStatus(tournamentStatus, currentRound);
     renderTicker(leaderboardData, challengers);
-    renderRanking(challengers, finalResults);
+    renderRanking(challengers, finalResults, resultsByRound, currentRound);
     renderRoundBreakdown(challengers, resultsByRound, currentRound);
     renderPickCards(challengers, finalResults);
     renderLeaderboard(leaderboardData, challengers);
