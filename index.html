@@ -905,11 +905,11 @@
 
     .lb-player { display: flex; align-items: center; gap: 8px; }
     .lb-headshot {
-      width: 28px;
-      height: 28px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       object-fit: cover;
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       flex-shrink: 0;
     }
 
@@ -1101,56 +1101,105 @@
     }
 
     @media (max-width: 768px) {
-      .header h1 { font-size: 28px; }
-      .header .subtitle { font-size: 13px; }
-      .tournament-info { flex-wrap: wrap; gap: 8px; font-size: 11px; }
-      .container { padding: 16px 10px; }
+      /* Header */
+      .header { padding: 24px 12px 20px; }
+      .header h1 { font-size: 26px; letter-spacing: 1px; }
+      .header .subtitle { font-size: 12px; }
+      .tournament-info { flex-wrap: wrap; gap: 6px; font-size: 10px; }
+      .container { padding: 12px 8px; }
 
       /* Ranking */
-      .rank-row { grid-template-columns: 36px 1fr auto; gap: 8px; padding: 12px 14px; }
+      .ranking-card { margin-bottom: 16px; }
+      .rank-row { grid-template-columns: 36px 1fr auto; gap: 8px; padding: 10px 12px; }
       .rank-stats { display: none; }
-      .rank-pts { font-size: 18px; min-width: 60px; }
-      .rank-name { font-size: 14px; }
+      .rank-pts { font-size: 18px; min-width: 50px; }
+      .rank-name { font-size: 13px; gap: 6px; }
+      .rank-pos { font-size: 20px; }
+      .rank-bar-wrap { height: 4px; }
 
       /* Round breakdown */
-      .round-breakdown { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .round-breakdown { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+      .round-card { padding: 10px 8px; }
+      .round-card .round-label { font-size: 11px; margin-bottom: 6px; }
       .round-card .rs .pts { font-size: 14px; }
+      .round-card .round-scores { gap: 8px; }
 
       /* Pick cards */
-      .pick-columns { grid-template-columns: 1fr; }
+      .pick-columns { grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
+      .pick-card-header { padding: 8px 10px; }
+      .pick-card-header h2 { font-size: 13px; }
       .pick-row { grid-template-columns: 20px 1fr auto auto; padding: 6px 10px; gap: 6px; }
-      .pick-player .flag { font-size: 16px; }
+      .pick-player .flag { font-size: 15px; }
       .pick-player .player-name { font-size: 12px; }
       .pick-player .country-name { font-size: 10px; }
       .pick-pos { font-size: 11px; padding: 2px 6px; min-width: 34px; }
       .pick-pts { font-size: 12px; min-width: 28px; }
 
       /* Leaderboard */
-      .lb-header, .lb-row { grid-template-columns: 36px 1fr 56px 56px; padding: 8px 10px; font-size: 13px; }
+      .leaderboard-section { margin-bottom: 16px; }
+      .lb-header, .lb-row { grid-template-columns: 32px 1fr 50px 50px; padding: 8px 8px; font-size: 12px; }
       .lb-header > :nth-child(3), .lb-header > :nth-child(4), .lb-header > :nth-child(5),
       .lb-row > :nth-child(3), .lb-row > :nth-child(4), .lb-row > :nth-child(5) { display: none; }
-      .lb-player .name { font-size: 13px; }
-      .lb-player .flag { font-size: 15px; }
-
-      /* Registration */
-      .reg-picks-grid { grid-template-columns: 1fr; }
-      .reg-header { flex-direction: column; gap: 8px; }
-      .reg-header h3 { font-size: 14px; }
-
-      /* Scoring */
-      .scoring-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-      .scoring-item .label { font-size: 11px; }
-      .scoring-item .value { font-size: 13px; }
+      .lb-player { gap: 6px; }
+      .lb-player .name { font-size: 12px; }
+      .lb-player .flag { font-size: 14px; }
+      .lb-headshot { width: 30px; height: 30px; }
+      .lb-pos { font-size: 12px; }
+      .lb-total { font-size: 13px; }
+      .lb-thru { font-size: 11px; }
 
       /* Scorecard */
-      .sc-table { min-width: 560px; }
+      .lb-scorecard { padding: 8px 6px 12px; }
+      .sc-round-tabs { gap: 3px; margin-bottom: 8px; }
+      .sc-round-tab { padding: 4px 10px; font-size: 10px; }
+      .sc-table { min-width: 520px; }
+      .sc-cell { padding: 3px 1px; font-size: 10px; }
+      .sc-score .sc-cell { font-size: 11px; }
+
+      /* Registration */
+      .reg-card { margin-bottom: 16px; }
+      .reg-picks-grid { grid-template-columns: 1fr; }
+      .reg-header { flex-direction: column; gap: 6px; padding: 10px 14px; }
+      .reg-header h3 { font-size: 14px; }
+      .reg-form { padding: 14px; }
+      .reg-input { padding: 8px 10px; font-size: 13px; }
+
+      /* Scoring */
+      .scoring-card { padding: 16px 12px; margin-bottom: 16px; }
+      .scoring-card h3 { font-size: 14px; margin-bottom: 12px; }
+      .scoring-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .scoring-item { padding: 8px 10px; }
+      .scoring-item .label { font-size: 10px; }
+      .scoring-item .value { font-size: 12px; }
+
+      /* Stats section */
+      .stats-section { margin-bottom: 16px; }
+      .charts-row { grid-template-columns: 1fr; gap: 10px; }
+      .key-numbers { flex-wrap: wrap; }
+      .key-num { min-width: 33%; padding: 8px 6px; }
+      .key-val { font-size: 14px; }
+      .key-label { font-size: 9px; }
+      .chart-card { padding: 12px 10px; }
+
+      /* Collapsible sections */
+      .collapsible-header { padding: 10px 14px; font-size: 12px; margin-bottom: 10px; }
+
+      /* Ticker */
+      .ticker-item { padding: 8px 16px; font-size: 12px; }
     }
 
     @media (max-width: 400px) {
-      .rank-row { grid-template-columns: 30px 1fr auto; padding: 10px; }
+      .header h1 { font-size: 22px; }
+      .header { padding: 20px 8px 16px; }
+      .rank-row { grid-template-columns: 30px 1fr auto; padding: 8px; }
       .rank-bar-wrap { display: none; }
+      .rank-pos { font-size: 18px; }
       .round-breakdown { grid-template-columns: repeat(2, 1fr); }
       .scoring-grid { grid-template-columns: 1fr; }
+      .lb-header, .lb-row { grid-template-columns: 28px 1fr 44px 44px; padding: 6px 6px; }
+      .lb-headshot { width: 26px; height: 26px; }
+      .lb-player .name { font-size: 11px; }
+      .pick-columns { gap: 8px; }
     }
 
     /* ===== SCORING CARD ===== */
