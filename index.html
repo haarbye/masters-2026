@@ -275,9 +275,11 @@
     }
 
     .rank-row:last-child { border-bottom: none; }
-    .rank-row:first-child { background: #fafaf5; }
+    .rank-row.rank-gold { background: rgba(255, 215, 0, 0.08); }
+    .rank-row.rank-silver { background: rgba(192, 192, 192, 0.10); }
+    .rank-row.rank-bronze { background: rgba(205, 127, 50, 0.08); }
 
-    .rank-pos { font-size: 18px; text-align: center; }
+    .rank-pos { font-size: 24px; text-align: center; }
 
     .rank-main { display: flex; flex-direction: column; gap: 6px; }
     .rank-name { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
@@ -942,6 +944,31 @@
       background: #fafaf5;
       border-top: 1px solid var(--border-light);
       overflow-x: auto;
+    }
+
+    .sc-round-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .sc-round-tab {
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid var(--border-light);
+      border-radius: 3px;
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .sc-round-tab.active {
+      background: var(--masters-green);
+      color: #fff;
+      border-color: var(--masters-green);
     }
 
     .sc-round-label {

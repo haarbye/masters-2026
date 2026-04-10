@@ -461,8 +461,10 @@ function renderRanking(challengers, results) {
     const barWidth = Math.round((r.total / maxPts) * 100);
     const lead = idx === 0 ? '' : ` (${r.total - ranked[0].total})`;
 
+    const rowClass = idx === 0 ? 'rank-gold' : idx === 1 ? 'rank-silver' : idx === 2 ? 'rank-bronze' : '';
+
     html += `
-      <div class="rank-row">
+      <div class="rank-row ${rowClass}">
         <div class="rank-pos">${medal}</div>
         <div class="rank-main">
           <div class="rank-name">
@@ -1169,20 +1171,37 @@ function parseScoreToPar(scoreStr) {
 }
 
 function buildScorecardHtml(entry) {
-  let html = '';
   const roundNums = Object.keys(entry.holeData).map(Number).sort();
+  const validRounds = roundNums.filter(r => entry.holeData[r] && entry.holeData[r].length > 0);
 
-  for (const r of roundNums) {
+  if (validRounds.length === 0) {
+    return '<div class="sc-empty">Ingen hull-data tilgjengelig ennå</div>';
+  }
+
+  const lastRound = validRounds[validRounds.length - 1];
+  const scId = 'sc-' + entry.name.replace(/\s+/g, '-').toLowerCase() + '-' + Date.now();
+
+  // Round tabs
+  let html = '<div class="sc-round-tabs">';
+  for (const r of validRounds) {
+    const active = r === lastRound ? ' active' : '';
+    html += `<button class="sc-round-tab${active}" onclick="(function(btn){
+      const wrap = btn.closest('.lb-scorecard');
+      wrap.querySelectorAll('.sc-round-content').forEach(d => d.style.display = 'none');
+      wrap.querySelectorAll('.sc-round-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      wrap.querySelector('[data-sc-round=\\'${r}\\']').style.display = 'block';
+    })(this)">${ROUND_NAMES[r] || 'R' + r}</button>`;
+  }
+  html += '</div>';
+
+  // Round content
+  for (const r of validRounds) {
     const holes = entry.holeData[r];
-    if (!holes || holes.length === 0) continue;
-
-    // Build hole number row, par row, score row
-    const outHoles = holes.filter(h => h.hole <= 9);
-    const inHoles = holes.filter(h => h.hole > 9);
-
+    const display = r === lastRound ? 'block' : 'none';
     let outStrokes = 0, inStrokes = 0;
 
-    html += `<div class="sc-round-label">Runde ${r}</div>`;
+    html += `<div class="sc-round-content" data-sc-round="${r}" style="display:${display}">`;
     html += '<div class="sc-table">';
 
     // Header: Hole numbers
@@ -1227,10 +1246,7 @@ function buildScorecardHtml(entry) {
     html += `<div class="sc-cell sc-tot">${totalStrokes || '-'}</div>`;
     html += '</div>'; // sc-score
     html += '</div>'; // sc-table
-  }
-
-  if (roundNums.length === 0) {
-    html = '<div class="sc-empty">Ingen hull-data tilgjengelig ennå</div>';
+    html += '</div>'; // sc-round-content
   }
 
   return html;
