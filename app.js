@@ -409,7 +409,7 @@ function parseESPNData(data) {
       }
 
       const athleteId = c.id || '';
-      const headshotUrl = athleteId ? `https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/${athleteId}.png&w=120&h=120&cb=1` : '';
+      const headshotUrl = athleteId ? `https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/${athleteId}.png&w=130&h=96&cb=1` : '';
 
       result.push({
         name, position: pos, posDisplay: String(pos), totalScore,
