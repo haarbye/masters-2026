@@ -556,7 +556,7 @@ function renderScoreChart() {
   const ctx = canvas.getContext('2d');
   ctx.scale(2, 2);
 
-  const PAD = { top: 20, right: 90, bottom: 36, left: 40 };
+  const PAD = { top: 28, right: 90, bottom: 36, left: 40 };
   const plotW = W - PAD.left - PAD.right;
   const plotH = H - PAD.top - PAD.bottom;
 
@@ -567,20 +567,19 @@ function renderScoreChart() {
   const maxTime = allTimes[allTimes.length - 1];
   const timeRange = Math.max(maxTime - minTime, 1);
 
-  // Find score range
-  let minScore = Infinity, maxScore = -Infinity;
+  // Find score range — always start Y-axis at 0
+  let minScore = 0, maxScore = 1;
   for (const s of scoreHistory) {
     for (const v of Object.values(s.scores)) {
-      if (v < minScore) minScore = v;
       if (v > maxScore) maxScore = v;
     }
   }
-  if (minScore === maxScore) { minScore -= 1; maxScore += 1; }
+  if (maxScore === 0) maxScore = 1;
   const scoreRange = maxScore - minScore || 1;
-  const scorePad = scoreRange * 0.1;
+  const scorePadTop = scoreRange * 0.1; // padding above max only
 
   function tx(time) { return PAD.left + ((time - minTime) / timeRange) * plotW; }
-  function ty(score) { return PAD.top + plotH - ((score - minScore + scorePad) / (scoreRange + scorePad * 2)) * plotH; }
+  function ty(score) { return PAD.top + plotH - ((score - minScore) / (scoreRange + scorePadTop)) * plotH; }
 
   // Clear
   ctx.clearRect(0, 0, W, H);
@@ -593,32 +592,42 @@ function renderScoreChart() {
     const y = PAD.top + (plotH / gridSteps) * i;
     ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
     // Score label
-    const scoreVal = Math.round(maxScore + scorePad - ((scoreRange + scorePad * 2) / gridSteps) * i);
+    const scoreVal = Math.round(maxScore + scorePadTop - ((scoreRange + scorePadTop) / gridSteps) * i);
     ctx.fillStyle = '#5a6b5a';
     ctx.font = '10px Inter, sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(scoreVal + 'p', PAD.left - 6, y + 3);
   }
 
-  // Time labels — evenly spaced across plot width with minimum pixel gap
+  // Time labels — show hourly ticks only
   ctx.textAlign = 'center';
   ctx.fillStyle = '#5a6b5a';
   ctx.font = '10px Inter, sans-serif';
   const DAY_ABBR = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
-  const MIN_LABEL_GAP = 70; // minimum pixels between labels
-  const maxLabels = Math.max(2, Math.floor(plotW / MIN_LABEL_GAP));
-  const timeSteps = Math.min(maxLabels, scoreHistory.length);
-  for (let i = 0; i < timeSteps; i++) {
-    const idx = Math.round((scoreHistory.length - 1) * i / (timeSteps - 1));
-    const t = scoreHistory[idx].time;
+  // Generate hourly timestamps within the time range
+  const firstHour = new Date(minTime);
+  firstHour.setMinutes(0, 0, 0);
+  if (firstHour.getTime() < minTime) firstHour.setHours(firstHour.getHours() + 1);
+  const hourLabels = [];
+  for (let t = firstHour.getTime(); t <= maxTime; t += 3600000) {
+    hourLabels.push(t);
+  }
+  // Always show first and last data points if no hourly ticks
+  if (hourLabels.length === 0 && scoreHistory.length >= 2) {
+    hourLabels.push(minTime, maxTime);
+  }
+  const MIN_LABEL_GAP = 70;
+  let lastLabelX = -Infinity;
+  for (const t of hourLabels) {
+    const x = tx(t);
+    if (x < PAD.left || x > W - PAD.right) continue;
+    if (x - lastLabelX < MIN_LABEL_GAP) continue;
     const date = new Date(t);
     const dayName = DAY_ABBR[date.getDay()];
     const hh = String(date.getHours()).padStart(2, '0');
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    const label = `${dayName} ${hh}:${mm}`;
-    // Place labels evenly across plot width, not at data x-positions
-    const xPos = PAD.left + (plotW * i / (timeSteps - 1));
-    ctx.fillText(label, xPos, H - PAD.bottom + 14);
+    const label = `${dayName} ${hh}:00`;
+    ctx.fillText(label, x, H - PAD.bottom + 14);
+    lastLabelX = x;
   }
 
   // Draw round-end markers (vertical dashed lines)
@@ -641,7 +650,7 @@ function renderScoreChart() {
       ctx.fillStyle = '#2d5a27';
       ctx.font = 'bold 10px Inter, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(ROUND_END_NAMES[s.roundEnd] || `R${s.roundEnd}`, x, PAD.top - 6);
+      ctx.fillText(ROUND_END_NAMES[s.roundEnd] || `R${s.roundEnd}`, x, PAD.top - 14);
       ctx.restore();
     }
   }
@@ -664,7 +673,7 @@ function renderScoreChart() {
       ctx.fillStyle = '#dc2626';
       ctx.font = 'bold 9px Inter, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(s.event, x, PAD.top + plotH + 12);
+      ctx.fillText(s.event, x, PAD.top - 4);
       ctx.restore();
     }
   }
