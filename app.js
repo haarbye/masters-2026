@@ -1247,16 +1247,24 @@ function renderLeaderboard(leaderboard, challengers) {
     const tt = teeTimeData[entry.athleteId];
     const teeTimeStr = (!isLive && entry.thru === '-' && tt) ? formatTeeTime(tt.teeTime) : '';
 
+    // Status badge: LIVE or tee time
+    let statusBadge = '';
+    if (isLive) {
+      statusBadge = `<span class="lb-live-inline"><span class="lb-live-badge"></span> LIVE</span>`;
+    } else if (teeTimeStr) {
+      statusBadge = `<span class="lb-tee-time">⛳ ${teeTimeStr}</span>`;
+    }
+
     html += `
       <div class="lb-entry ${highlight}">
         <div class="lb-row" data-player="${escAttr(entry.name)}" style="cursor:pointer">
-          <div class="lb-pos">${entry.posDisplay}${isLive ? '<span class="lb-live-badge" title="Live på banen"></span>' : ''}</div>
+          <div class="lb-pos">${entry.posDisplay}</div>
           <div class="lb-player">
             ${entry.headshotUrl ? `<img class="lb-headshot" src="${entry.headshotUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
             <span class="flag">${flagEmoji}</span>
             <span class="name">${esc(entry.name)}</span>
             <span class="picked-by">${dots}</span>
-            ${teeTimeStr ? `<span class="lb-tee-time">⛳ ${teeTimeStr}</span>` : ''}
+            ${statusBadge}
           </div>
           <div class="lb-round text-center">${entry.rounds[1] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[2] || '-'}</div>
