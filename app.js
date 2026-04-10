@@ -48,12 +48,13 @@ const PLAYER_DB = {
   'j.j. spaun':          { name: 'J.J. Spaun',         country: 'USA',       flag: '🇺🇸' },
   'jj spaun':            { name: 'J.J. Spaun',         country: 'USA',       flag: '🇺🇸' },
   'j. j. spaun':         { name: 'J.J. Spaun',         country: 'USA',       flag: '🇺🇸' },
+  'rory mcilroy':        { name: 'Rory McIlroy',       country: 'Nord-Irland', flag: '🇮🇪' },
 };
 
 const FLAG_MAP = {
   'united states': '🇺🇸', 'usa': '🇺🇸',
   'england': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
-  'northern ireland': '🇬🇧', 'ireland': '🇮🇪',
+  'northern ireland': '🇮🇪', 'ireland': '🇮🇪',
   'spain': '🇪🇸', 'sweden': '🇸🇪', 'norway': '🇳🇴',
   'japan': '🇯🇵', 'south korea': '🇰🇷', 'korea': '🇰🇷',
   'australia': '🇦🇺', 'canada': '🇨🇦', 'south africa': '🇿🇦',
@@ -156,6 +157,8 @@ async function getAllChallengers() {
 // Top-10 points per round: flat values, no multiplier
 const TOP10_PTS_PER_ROUND = { 1: 1, 2: 2, 3: 3, 4: 3 };
 const ROUND_NAMES = { 1: 'Torsdag', 2: 'Fredag', 3: 'Lørdag', 4: 'Søndag' };
+// Earliest tee times in Norwegian time (CEST, UTC+2). Augusta is EDT (UTC-4), so +6h.
+const ROUND_START_TIMES = { 1: '13:40', 2: '13:40', 3: '16:00', 4: '16:00' };
 const ROUND_PTS_LABELS = { 1: '1p', 2: '2p', 3: '3p', 4: 'Full' };
 
 // --- State ---
@@ -1250,7 +1253,14 @@ function renderStatus(status, round) {
     text.textContent = `Live — ${ROUND_NAMES[round] || 'Runde ' + round}`;
   } else if (status === 'complete') {
     dot.style.display = 'none';
-    text.textContent = 'Turneringen er ferdig';
+    if (round >= 4) {
+      text.textContent = 'Turneringen er ferdig';
+    } else {
+      const nextRound = round + 1;
+      const nextName = ROUND_NAMES[nextRound] || 'Neste runde';
+      const nextTime = ROUND_START_TIMES[nextRound] || '';
+      text.textContent = `${ROUND_NAMES[round]} er ferdig — ${nextName} starter ${nextTime ? 'kl. ' + nextTime + ' norsk tid' : 'snart'}`;
+    }
   } else {
     dot.style.display = 'none';
     text.textContent = 'Venter på start...';
