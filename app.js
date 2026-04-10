@@ -1253,7 +1253,7 @@ function buildScorecardHtml(entry) {
       wrap.querySelectorAll('.sc-round-tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
       wrap.querySelector('[data-sc-round=\\'${r}\\']').style.display = 'block';
-    })(this)">${ROUND_NAMES[r] || 'R' + r}</button>`;
+    })(this)">R${r} · ${ROUND_NAMES[r] || 'Runde ' + r}</button>`;
   }
   html += '</div>';
 
@@ -1264,50 +1264,56 @@ function buildScorecardHtml(entry) {
     let outStrokes = 0, inStrokes = 0;
 
     html += `<div class="sc-round-content" data-sc-round="${r}" style="display:${display}">`;
-    html += '<div class="sc-table">';
+    html += '<table class="sc-table"><colgroup>';
+    html += '<col class="sc-col-label">';
+    for (let i = 0; i < 9; i++) html += '<col class="sc-col-hole">';
+    html += '<col class="sc-col-sum">';
+    for (let i = 0; i < 9; i++) html += '<col class="sc-col-hole">';
+    html += '<col class="sc-col-sum"><col class="sc-col-tot">';
+    html += '</colgroup>';
 
     // Header: Hole numbers
-    html += '<div class="sc-row sc-header"><div class="sc-cell sc-label">Hull</div>';
-    for (let h = 1; h <= 9; h++) html += `<div class="sc-cell">${h}</div>`;
-    html += '<div class="sc-cell sc-out">UT</div>';
-    for (let h = 10; h <= 18; h++) html += `<div class="sc-cell">${h}</div>`;
-    html += '<div class="sc-cell sc-in">IN</div><div class="sc-cell sc-tot">TOT</div></div>';
+    html += '<tr class="sc-header"><th class="sc-cell sc-label">Hull</th>';
+    for (let h = 1; h <= 9; h++) html += `<th class="sc-cell">${h}</th>`;
+    html += '<th class="sc-cell sc-out">UT</th>';
+    for (let h = 10; h <= 18; h++) html += `<th class="sc-cell">${h}</th>`;
+    html += '<th class="sc-cell sc-in">IN</th><th class="sc-cell sc-tot">TOT</th></tr>';
 
     // Par row
-    html += '<div class="sc-row sc-par"><div class="sc-cell sc-label">Par</div>';
-    for (let h = 0; h < 9; h++) html += `<div class="sc-cell">${AUGUSTA_PAR[h]}</div>`;
-    html += `<div class="sc-cell sc-out">${AUGUSTA_OUT}</div>`;
-    for (let h = 9; h < 18; h++) html += `<div class="sc-cell">${AUGUSTA_PAR[h]}</div>`;
-    html += `<div class="sc-cell sc-in">${AUGUSTA_IN}</div><div class="sc-cell sc-tot">${AUGUSTA_TOTAL}</div></div>`;
+    html += '<tr class="sc-par"><td class="sc-cell sc-label">Par</td>';
+    for (let h = 0; h < 9; h++) html += `<td class="sc-cell">${AUGUSTA_PAR[h]}</td>`;
+    html += `<td class="sc-cell sc-out">${AUGUSTA_OUT}</td>`;
+    for (let h = 9; h < 18; h++) html += `<td class="sc-cell">${AUGUSTA_PAR[h]}</td>`;
+    html += `<td class="sc-cell sc-in">${AUGUSTA_IN}</td><td class="sc-cell sc-tot">${AUGUSTA_TOTAL}</td></tr>`;
 
     // Score row
-    html += '<div class="sc-row sc-score"><div class="sc-cell sc-label">Score</div>';
+    html += '<tr class="sc-score"><td class="sc-cell sc-label">Score</td>';
     for (let h = 1; h <= 9; h++) {
       const holeScore = holes.find(x => x.hole === h);
       if (holeScore) {
         outStrokes += holeScore.strokes;
         const cls = getHoleClass(holeScore.toPar);
-        html += `<div class="sc-cell ${cls}">${cls ? `<span class="sc-num">${holeScore.strokes}</span>` : holeScore.strokes}</div>`;
+        html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${holeScore.strokes}</span>` : holeScore.strokes}</td>`;
       } else {
-        html += '<div class="sc-cell">-</div>';
+        html += '<td class="sc-cell">-</td>';
       }
     }
-    html += `<div class="sc-cell sc-out">${outStrokes || '-'}</div>`;
+    html += `<td class="sc-cell sc-out">${outStrokes || '-'}</td>`;
     for (let h = 10; h <= 18; h++) {
       const holeScore = holes.find(x => x.hole === h);
       if (holeScore) {
         inStrokes += holeScore.strokes;
         const cls = getHoleClass(holeScore.toPar);
-        html += `<div class="sc-cell ${cls}">${cls ? `<span class="sc-num">${holeScore.strokes}</span>` : holeScore.strokes}</div>`;
+        html += `<td class="sc-cell ${cls}">${cls ? `<span class="sc-num">${holeScore.strokes}</span>` : holeScore.strokes}</td>`;
       } else {
-        html += '<div class="sc-cell">-</div>';
+        html += '<td class="sc-cell">-</td>';
       }
     }
     const totalStrokes = (outStrokes || 0) + (inStrokes || 0);
-    html += `<div class="sc-cell sc-in">${inStrokes || '-'}</div>`;
-    html += `<div class="sc-cell sc-tot">${totalStrokes || '-'}</div>`;
-    html += '</div>'; // sc-score
-    html += '</div>'; // sc-table
+    html += `<td class="sc-cell sc-in">${inStrokes || '-'}</td>`;
+    html += `<td class="sc-cell sc-tot">${totalStrokes || '-'}</td>`;
+    html += '</tr>'; // sc-score
+    html += '</table>'; // sc-table
     html += '</div>'; // sc-round-content
   }
 

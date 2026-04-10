@@ -1025,28 +1025,26 @@
     .sc-round-label:first-child { margin-top: 0; }
 
     .sc-table {
-      display: grid;
-      grid-template-rows: auto auto auto;
-      margin-bottom: 12px;
+      width: 100%;
       min-width: 760px;
-      row-gap: 2px;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-bottom: 12px;
+      table-layout: fixed;
     }
 
-    .sc-row {
-      display: grid;
-      grid-template-columns: 64px repeat(9, 1fr) 46px repeat(9, 1fr) 46px 52px;
-      gap: 0;
-    }
+    .sc-col-label { width: 68px; }
+    .sc-col-hole { }
+    .sc-col-sum { width: 48px; }
+    .sc-col-tot { width: 54px; }
 
     .sc-cell {
       padding: 12px 4px;
       text-align: center;
       font-size: 15px;
       font-weight: 600;
-      border-right: 1px solid rgba(0,0,0,0.06);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
-
-    .sc-cell:last-child { border-right: none; }
 
     .sc-label {
       text-align: left;
@@ -1055,11 +1053,12 @@
       font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
+      padding-left: 4px;
     }
 
-    .sc-header .sc-cell { color: var(--text-muted); font-size: 14px; font-weight: 800; padding: 10px 4px; }
+    .sc-header .sc-cell { color: var(--text-muted); font-size: 14px; font-weight: 800; padding: 10px 4px; border-bottom: 2px solid var(--border-light); }
     .sc-par .sc-cell { color: var(--text-muted); font-size: 15px; font-weight: 600; background: rgba(0,0,0,0.025); padding: 10px 4px; }
-    .sc-score .sc-cell { font-weight: 800; font-size: 17px; padding: 14px 4px; }
+    .sc-score .sc-cell { font-weight: 800; font-size: 17px; padding: 14px 4px; border-bottom: none; }
 
     .sc-out, .sc-in {
       font-weight: 800 !important;
@@ -1079,7 +1078,10 @@
     /* Hole score symbols — traditional PGA scorecard */
     .sc-score .sc-cell {
       position: relative;
-      display: flex;
+    }
+
+    .sc-score .sc-cell > * {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
     }
