@@ -328,10 +328,6 @@ function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
       isCut = match.isCut || false;
       const isDQ = match.isDQ || false;
 
-      // Check if player is below projected cut (R2 live only)
-      const playerPar = projCutPar !== null ? parseScoreToPar(match.totalScore) : null;
-      const isBelowProjectedCut = projCutPar !== null && playerPar !== null && playerPar > projCutPar;
-
       if (isSunday && isDQ) {
         // Søndag: DQ gir straff
         pts = CUT_PENALTY;
@@ -340,11 +336,6 @@ function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
         // R2–R3: CUT gir straff (ikke R1 — CUT skjer etter fredag)
         pts = CUT_PENALTY;
         cuts++;
-      } else if (!isSunday && isBelowProjectedCut && roundNum === 2) {
-        // R2 live: player below projected cut — show projected penalty
-        pts = CUT_PENALTY;
-        cuts++;
-        isCut = true; // mark as projected cut for display
       } else if (pos <= 10) {
         hits++;
         if (isSunday) {
@@ -372,7 +363,11 @@ function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
       }
     }
 
-    details.push({ pickRank: pickSlot, name: picks[i], leaderboardPos: pos, score, thru, roundPts: pts, isCut, isDQ: match?.isDQ || false });
+    // Check if player is at risk of being cut (R2 live, not yet actually cut)
+    const playerPar2 = projCutPar !== null && match ? parseScoreToPar(match.totalScore) : null;
+    const cutRisk = projCutPar !== null && playerPar2 !== null && playerPar2 > projCutPar && !isCut;
+
+    details.push({ pickRank: pickSlot, name: picks[i], leaderboardPos: pos, score, thru, roundPts: pts, isCut, isDQ: match?.isDQ || false, cutRisk });
     total += pts;
   }
 
@@ -1008,9 +1003,16 @@ function renderPickCards(challengers, results) {
         else if (pos <= 10) { posClass = 'top10'; rowClass = 'in-top10'; }
       }
 
+      // Cut risk warning (not deducted, just visual)
+      if (d.cutRisk) {
+        rowClass = 'cut-risk';
+        posClass = 'cut-risk-pos';
+      }
+
       const scoreText = d.score || '';
       const thruText = d.thru && d.thru !== '-' ? `Thru ${d.thru}` : '';
       const ptsClass = d.roundPts > 0 ? 'has-pts' : 'no-pts';
+      const cutWarning = d.cutRisk ? '<span class="cut-risk-badge">✂ CUT? (−2p)</span>' : '';
 
       rowsHtml += `
         <div class="pick-row ${rowClass}" data-goto-player="${escAttr(d.name)}" style="cursor:pointer" title="Vis på leaderboard">
@@ -1018,7 +1020,7 @@ function renderPickCards(challengers, results) {
           <div class="pick-player">
             <span class="flag">${info.flag}</span>
             <div class="info">
-              <span class="player-name">${esc(info.name)}</span>
+              <span class="player-name">${esc(info.name)} ${cutWarning}</span>
               <span class="country-name">${esc(info.country)}${scoreText ? ' · ' + esc(scoreText) : ''}${thruText ? ' · ' + thruText : ''}</span>
             </div>
           </div>
