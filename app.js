@@ -1923,6 +1923,9 @@ async function updateDashboard() {
     renderPickCards(challengers, finalResults);
     renderLeaderboard(leaderboardData, challengers);
 
+    // Update chat name dropdowns now that challengers are loaded
+    updateChatNameDropdowns();
+
     // Fetch tee times in background (non-blocking)
     fetchTeeTimes().then(() => renderLeaderboard(leaderboardData, lastChallengers)).catch(() => {});
 
@@ -2093,6 +2096,17 @@ function getChatNameOptions() {
   const names = lastChallengers.map(c => c.name).sort();
   // Sebastian only available for admin
   return names.filter(n => n !== CHAT_ADMIN_NAME || isAdmin());
+}
+
+function updateChatNameDropdowns() {
+  const options = getChatNameOptions();
+  if (options.length === 0) return;
+  const optionsHtml = `<option value="" disabled ${!chatMyName ? 'selected' : ''}>Velg navn</option>` +
+    options.map(n => `<option value="${escAttr(n)}" ${n === chatMyName ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  ['chatMobile', 'chatDesktop'].forEach(id => {
+    const sel = document.getElementById(`chatName-${id}`);
+    if (sel) sel.innerHTML = optionsHtml;
+  });
 }
 
 function chatHtml(targetId) {
@@ -2316,10 +2330,15 @@ async function sendChatMessage(sourceId) {
 
   sendBtn.disabled = true;
   try {
+    const payload = { name, message };
+    // Include admin token for Sebastian messages (validated by Supabase RLS)
+    if (name === CHAT_ADMIN_NAME && isAdmin()) {
+      payload.admin_token = 'guttorm-er-sansen-2026';
+    }
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/chat_messages`, {
       method: 'POST',
       headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ name, message }),
+      body: JSON.stringify(payload),
     });
 
     if (!resp.ok) throw new Error('Send failed');
