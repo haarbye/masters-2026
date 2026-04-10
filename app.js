@@ -73,7 +73,9 @@ const FLAG_MAP = {
 const BUILTIN_NAMES = new Set(['havard', 'sebastian']); // protected from deletion
 
 // --- Registration deadline ---
-const REGISTRATION_DEADLINE = new Date('2026-04-09T18:00:00+02:00');
+const REGISTRATION_DEADLINE = new Date('2026-04-10T13:40:00+02:00');
+// Late registrants (registered on or after this date) skip round 1 points
+const LATE_REG_CUTOFF = new Date('2026-04-10T00:00:00+02:00');
 
 function isRegistrationOpen() {
   return Date.now() < REGISTRATION_DEADLINE.getTime();
@@ -93,14 +95,14 @@ async function loadExtraChallengers() {
 
   try {
     const resp = await fetch(
-      `${SUPABASE_URL}/rest/v1/challengers?select=name,picks&order=created_at.asc`,
+      `${SUPABASE_URL}/rest/v1/challengers?select=name,picks,created_at&order=created_at.asc`,
       { headers: SB_HEADERS }
     );
     if (!resp.ok) throw new Error(`Supabase ${resp.status}`);
     const rows = await resp.json();
     const extras = rows
       .filter(r => r.name && Array.isArray(r.picks) && r.picks.length === 10)
-      .map(r => ({ name: r.name, picks: r.picks }));
+      .map(r => ({ name: r.name, picks: r.picks, createdAt: r.created_at }));
 
     // Cache in memory and localStorage (offline fallback)
     cachedExtras = extras;
@@ -1600,10 +1602,15 @@ async function updateDashboard() {
       const roundResults = challengers.map(c => calcRoundPoints(c.picks, leaderboardData, r));
       resultsByRound[r] = roundResults.map(res => res.total);
 
-      // Accumulate totals
+      // Accumulate totals (skip round 1 for late registrants)
       roundResults.forEach((res, i) => {
+        const isLate = challengers[i].createdAt && new Date(challengers[i].createdAt) >= LATE_REG_CUTOFF;
+        if (r === 1 && isLate) {
+          resultsByRound[r][i] = 0; // show 0 in round breakdown too
+          return;
+        }
         cumulativeResults[i].total += res.total;
-        cumulativeResults[i].hits = res.hits; // current round hits (not cumulative)
+        cumulativeResults[i].hits = res.hits;
         cumulativeResults[i].cuts += res.cuts;
       });
     }
