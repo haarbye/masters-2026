@@ -1279,10 +1279,11 @@ const AUGUSTA_TOTAL = AUGUSTA_OUT + AUGUSTA_IN; // 72
 let lbSortField = 'position'; // position, name, total, r1, r2, r3, r4
 let lbSortDir = 'asc';
 const expandedPlayers = new Set();
+let lbShowAll = false;
 
 function renderLeaderboard(leaderboard, challengers) {
   const container = document.getElementById('leaderboard');
-  let shown = leaderboard.slice(0, 50);
+  let shown = lbShowAll ? leaderboard : leaderboard.slice(0, 50);
 
   if (shown.length === 0) {
     container.innerHTML = `<div class="loading"><div class="spinner"></div>Turneringen har ikke startet ennå...</div>`;
@@ -1399,7 +1400,24 @@ function renderLeaderboard(leaderboard, challengers) {
       </div>`;
   }
 
+  // Show all / show less button
+  if (!lbShowAll && leaderboard.length > 50) {
+    html += `<div style="text-align:center;padding:12px"><button id="lbShowAllBtn" style="background:var(--masters-green);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Vis alle ${leaderboard.length} spillere</button></div>`;
+  } else if (lbShowAll && leaderboard.length > 50) {
+    html += `<div style="text-align:center;padding:12px"><button id="lbShowLessBtn" style="background:var(--text-muted);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Vis topp 50</button></div>`;
+  }
+
   container.innerHTML = html;
+
+  // Wire up show all/less
+  document.getElementById('lbShowAllBtn')?.addEventListener('click', () => {
+    lbShowAll = true;
+    renderLeaderboard(leaderboardData, lastChallengers);
+  });
+  document.getElementById('lbShowLessBtn')?.addEventListener('click', () => {
+    lbShowAll = false;
+    renderLeaderboard(leaderboardData, lastChallengers);
+  });
 
   // Wire up row clicks
   container.querySelectorAll('.lb-row[data-player]').forEach(row => {
