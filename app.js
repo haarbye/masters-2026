@@ -1200,6 +1200,9 @@ function renderLeaderboard(leaderboard, challengers) {
   // Projected cut line
   const projectedCut = currentRound <= 2 ? getProjectedCutScore(leaderboard) : null;
 
+  // Group tee times for separator headers
+  let lastTeeTimeLabel = null;
+
   let html = '';
   let cutLineInserted = false;
 
@@ -1243,9 +1246,13 @@ function renderLeaderboard(leaderboard, challengers) {
 
     const isLive = entry.thru && entry.thru !== '-' && entry.thru !== 'F' && entry.thru !== '';
 
-    // Tee time for players not yet started
+    // Tee time separator — insert when tee time changes for not-yet-started players
     const tt = teeTimeData[entry.athleteId];
-    const teeTimeStr = (!isLive && entry.thru === '-' && tt) ? formatTeeTime(tt.teeTime) : '';
+    const teeTimeLabel = (!isLive && entry.thru === '-' && tt) ? formatTeeTime(tt.teeTime) : null;
+    if (teeTimeLabel && teeTimeLabel !== lastTeeTimeLabel && lbSortField === 'position') {
+      html += `<div class="lb-tee-time-header"><span>🕐 Tee time: ${teeTimeLabel}</span></div>`;
+      lastTeeTimeLabel = teeTimeLabel;
+    }
 
     html += `
       <div class="lb-entry ${highlight}">
@@ -1262,7 +1269,7 @@ function renderLeaderboard(leaderboard, challengers) {
           <div class="lb-round text-center">${entry.rounds[3] || '-'}</div>
           <div class="lb-round text-center">${entry.rounds[4] || '-'}</div>
           <div class="lb-total ${scoreClass} text-center">${entry.totalScore}${entry.thru && entry.thru !== '-' && entry.thru !== 'F' ? `<span class="lb-thru-inline">${entry.thru}</span>` : ''}</div>
-          <div class="lb-thru text-center">${entry.thru}${teeTimeStr ? `<div class="lb-tee-time">${teeTimeStr}</div>` : ''}</div>
+          <div class="lb-thru text-center">${entry.thru}</div>
         </div>
         ${isExpanded ? `<div class="lb-scorecard">${scorecardHtml}</div>` : ''}
       </div>`;
