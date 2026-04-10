@@ -1765,23 +1765,43 @@
         display: flex;
         flex-direction: column;
         position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 340px;
-        max-height: 480px;
+        bottom: 12px;
+        right: 12px;
+        width: 280px;
+        max-height: 400px;
         background: var(--card);
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
         border-radius: 8px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
         z-index: 1000;
         overflow: hidden;
         transition: max-height 0.3s ease;
       }
+      .chat-sidebar .chat-header {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
       .chat-sidebar.chat-collapsed {
-        max-height: 46px;
+        max-height: 38px;
       }
       .chat-sidebar .chat-messages {
-        height: 340px;
+        height: 260px;
+      }
+      .chat-sidebar .chat-input-wrap {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+      .chat-sidebar .chat-name-input,
+      .chat-sidebar .chat-msg-input {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+      .chat-sidebar .chat-send-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      .chat-sidebar .chat-name-input {
+        width: 70px;
       }
     }
 
