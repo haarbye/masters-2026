@@ -2087,7 +2087,7 @@ const CHAT_POLL_INTERVAL = 10000; // 10s
 const CHAT_ADMIN_NAME = 'Sebastian';
 let chatMessages = [];
 let chatLastId = 0;
-let chatMyName = localStorage.getItem('chatName') || '';
+let chatMyName = ''; // never pre-select — user must choose each session
 let chatOpen = { chatMobile: false, chatDesktop: true };
 let chatUnread = 0;
 let chatSeenId = parseInt(localStorage.getItem('chatSeenId') || '0');
@@ -2225,13 +2225,26 @@ function initChat() {
     sendBtn.addEventListener('click', () => sendChatMessage(id));
     input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMessage(id); });
 
-    // Sync name select between both instances
-    nameSelect?.addEventListener('change', () => {
+    // Sync name select between both instances + claim name
+    nameSelect?.addEventListener('change', async () => {
       chatMyName = nameSelect.value;
       localStorage.setItem('chatName', chatMyName);
       const otherId = id === 'chatMobile' ? 'chatDesktop' : 'chatMobile';
       const other = document.getElementById(`chatName-${otherId}`);
       if (other) other.value = chatMyName;
+      // Claim name by sending a hidden system message (locks session_id in DB)
+      if (chatMyName) {
+        try {
+          const payload = { name: chatMyName, message: '__claim__', session_id: chatSessionId };
+          if (chatMyName === CHAT_ADMIN_NAME && isAdmin()) payload.admin_token = 'guttorm-er-sansen-2026';
+          await fetch(`${SUPABASE_URL}/rest/v1/chat_messages`, {
+            method: 'POST',
+            headers: { ...SB_HEADERS, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          await fetchChatMessages();
+        } catch (e) { console.error('Claim failed:', e); }
+      }
     });
 
     // Scroll detection for "new messages" button
@@ -2262,7 +2275,7 @@ async function fetchChatMessages() {
     chatMessages = msgs;
     if (msgs.length > 0) chatLastId = msgs[msgs.length - 1].id;
 
-    const unseenMsgs = msgs.filter(m => m.id > chatSeenId && m.name.toLowerCase() !== chatMyName.toLowerCase());
+    const unseenMsgs = msgs.filter(m => m.id > chatSeenId && m.message !== '__claim__' && m.name.toLowerCase() !== chatMyName.toLowerCase());
     const anyOpen = Object.values(chatOpen).some(v => v);
     if (anyOpen && !isFirstLoad) {
       chatUnread = 0;
@@ -2292,7 +2305,7 @@ async function fetchChatMessages() {
 }
 
 function renderChatMessages() {
-  if (chatMessages.length === 0) {
+  if (chatMessages.filter(m => m.message !== '__claim__').length === 0) {
     const empty = '<div class="chat-empty">Ingen meldinger ennå — vær den første!</div>';
     ['chatMobile', 'chatDesktop'].forEach(id => {
       const el = document.getElementById(`chatMsgs-${id}`);
@@ -2304,7 +2317,8 @@ function renderChatMessages() {
   let html = '';
   let lastDay = '';
 
-  for (const m of chatMessages) {
+  const visibleMessages = chatMessages.filter(m => m.message !== '__claim__');
+  for (const m of visibleMessages) {
     const d = new Date(m.created_at);
     const dayStr = d.toLocaleDateString('no-NO', { weekday: 'long', day: 'numeric', month: 'short' });
     const time = d.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
