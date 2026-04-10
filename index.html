@@ -1596,6 +1596,33 @@
 
     .news-banner strong { color: #991b1b; }
 
+    .leader-quote {
+      background: #fff;
+      border: 2px solid var(--masters-green);
+      border-radius: 2px;
+      padding: 16px 20px;
+      margin-bottom: var(--section-gap);
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.6;
+      position: relative;
+      animation: fadeSlideIn 0.5s ease;
+    }
+
+    .leader-quote-label {
+      font-family: 'Inter', sans-serif;
+      font-style: normal;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--masters-green);
+      margin-bottom: 6px;
+      display: block;
+    }
+
     /* ===== ENTRANCE ANIMATIONS ===== */
     @keyframes fadeSlideIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -1931,6 +1958,12 @@
     <!-- News banner -->
     <div class="news-banner">
       <strong>Nyhet:</strong> Registrering er gjenåpnet frem til kl. 18:00! Nye spillere kan maks velge 2 av nåværende topp 10 — og starter uten torsdagspoeng. Spill med hjertet!
+    </div>
+
+    <!-- Leader quote -->
+    <div class="leader-quote">
+      <span class="leader-quote-label">Dagens melding fra lederen</span>
+      &laquo;Jeg har ikke akkurat sovet d&aring;rlig i natt. Men jeg er ydmyk. Det er tre runder igjen, og som enhver seri&oslash;s golfentusiast vet: Augusta gir og Augusta tar. Lykke til til resten... dere trenger det..&raquo; <span style="font-style:normal;font-weight:700;color:var(--masters-green)">&mdash; Guttorm</span>
     </div>
 
     <!-- Ranking + Chart swipeable -->
