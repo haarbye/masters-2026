@@ -64,28 +64,36 @@
     .header h1 { display: none; }
     .header .subtitle { display: none; }
 
-    /* Face overlays on banner */
-    .face-overlay {
+    /* Face overlay slots on banner */
+    .face-slot {
       position: absolute;
       border-radius: 50%;
-      object-fit: cover;
+      overflow: hidden;
       z-index: 2;
-      opacity: 0.88;
       border: 2px solid rgba(255,255,255,0.5);
       box-shadow: 0 2px 10px rgba(0,0,0,0.4);
       pointer-events: none;
     }
-    /* Far left */
+    .face-slot img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 15%;
+      transform: scale(3);
+      opacity: 0;
+      transition: opacity 1.2s ease-in-out;
+    }
+    .face-slot img.face-active { opacity: 1; }
+
+    /* Slot positions — mobile */
     .face-1  { width: 58px; height: 58px; top: 5px;   left: 2%;  transform: rotate(-14deg); }
     .face-2  { width: 48px; height: 48px; top: 55px;  left: 8%;  transform: rotate(10deg); }
     .face-3  { width: 42px; height: 42px; bottom: 22px; left: 3%; transform: rotate(-22deg); }
-    /* Left-center (before Masters text) */
     .face-4  { width: 52px; height: 52px; top: 8px;   left: 18%; transform: rotate(8deg); }
     .face-5  { width: 44px; height: 44px; bottom: 18px; left: 16%; transform: rotate(-10deg); }
-    /* Right-center (after Masters text) */
     .face-6  { width: 50px; height: 50px; top: 6px;   right: 18%; transform: rotate(-8deg); }
     .face-7  { width: 46px; height: 46px; bottom: 20px; right: 16%; transform: rotate(15deg); }
-    /* Far right */
     .face-8  { width: 60px; height: 60px; top: 5px;   right: 2%;  transform: rotate(12deg); }
     .face-9  { width: 50px; height: 50px; top: 52px;  right: 7%;  transform: rotate(-18deg); }
     .face-10 { width: 44px; height: 44px; bottom: 20px; right: 3%; transform: rotate(20deg); }
@@ -2197,17 +2205,74 @@
 <body>
   <div class="header">
     <img src="masters-header-hd.webp" alt="Masters" class="header-banner">
-    <!-- Face overlays — spread across banner, avoiding centre Masters text -->
-    <img src="face1.png" alt="" class="face-overlay face-1">
-    <img src="face2.png" alt="" class="face-overlay face-2">
-    <img src="face1.png" alt="" class="face-overlay face-3">
-    <img src="face2.png" alt="" class="face-overlay face-4">
-    <img src="face1.png" alt="" class="face-overlay face-5">
-    <img src="face2.png" alt="" class="face-overlay face-6">
-    <img src="face2.png" alt="" class="face-overlay face-7">
-    <img src="face1.png" alt="" class="face-overlay face-8">
-    <img src="face1.png" alt="" class="face-overlay face-9">
-    <img src="face2.png" alt="" class="face-overlay face-10">
+    <!-- Animated face overlays — each slot cycles through all people -->
+    <div class="face-slot face-1" data-face-slot></div>
+    <div class="face-slot face-2" data-face-slot></div>
+    <div class="face-slot face-3" data-face-slot></div>
+    <div class="face-slot face-4" data-face-slot></div>
+    <div class="face-slot face-5" data-face-slot></div>
+    <div class="face-slot face-6" data-face-slot></div>
+    <div class="face-slot face-7" data-face-slot></div>
+    <div class="face-slot face-8" data-face-slot></div>
+    <div class="face-slot face-9" data-face-slot></div>
+    <div class="face-slot face-10" data-face-slot></div>
+    <script>
+    (function() {
+      const faces = [
+        'face1.png', 'face2.png', 'person-guttorm.png', 'person-klaus.png',
+        'person-ola.png', 'person-steffen.jpg', 'person-havard-b.png', 'person-havard-t.png'
+      ];
+      const slots = document.querySelectorAll('[data-face-slot]');
+      // Fill each slot with all face images
+      slots.forEach(slot => {
+        faces.forEach((src, i) => {
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = '';
+          slot.appendChild(img);
+        });
+      });
+      // Shuffle array helper
+      function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+      // Each slot gets a shuffled order and staggers its start
+      const slotState = [];
+      slots.forEach((slot, si) => {
+        const order = shuffle(faces.map((_, i) => i));
+        slotState.push({ order, current: 0 });
+        // Show initial face
+        const imgs = slot.querySelectorAll('img');
+        imgs[order[0]].classList.add('face-active');
+      });
+      // Rotate faces — each slot changes at different intervals
+      function rotateFace(slotIdx) {
+        const slot = slots[slotIdx];
+        const state = slotState[slotIdx];
+        const imgs = slot.querySelectorAll('img');
+        // Fade out current
+        imgs[state.order[state.current]].classList.remove('face-active');
+        // Next
+        state.current = (state.current + 1) % state.order.length;
+        if (state.current === 0) state.order = shuffle(faces.map((_, i) => i));
+        // Fade in next
+        imgs[state.order[state.current]].classList.add('face-active');
+      }
+      // Stagger rotation — each slot changes every 3-5s with random offset
+      slots.forEach((_, i) => {
+        const interval = 3000 + Math.random() * 2000;
+        const delay = Math.random() * 3000;
+        setTimeout(() => {
+          setInterval(() => rotateFace(i), interval);
+        }, delay);
+      });
+    })();
+    </script>
     <div class="tournament-info">
       <span>Augusta National Golf Club</span>
       <span>|</span>
