@@ -84,6 +84,10 @@
       opacity: 0;
       transition: opacity 1.2s ease-in-out;
     }
+    .face-slot img.face-precropped {
+      transform: scale(1);
+      object-position: center center;
+    }
     .face-slot img.face-active { opacity: 1; }
 
     /* Slot positions — mobile */
@@ -2219,16 +2223,23 @@
     <script>
     (function() {
       const faces = [
-        'face1.png', 'face2.png', 'person-guttorm.png', 'person-klaus.png',
-        'person-ola.png', 'person-steffen.jpg', 'person-havard-b.png', 'person-havard-t.png'
+        { src: 'face1.png', precropped: true },
+        { src: 'face2.png', precropped: true },
+        { src: 'person-guttorm.png' },
+        { src: 'person-klaus.png' },
+        { src: 'person-ola.png' },
+        { src: 'person-steffen.jpg' },
+        { src: 'person-havard-b.png' },
+        { src: 'person-havard-t.png' }
       ];
       const slots = document.querySelectorAll('[data-face-slot]');
       // Fill each slot with all face images
       slots.forEach(slot => {
-        faces.forEach((src, i) => {
+        faces.forEach((f, i) => {
           const img = document.createElement('img');
-          img.src = src;
+          img.src = f.src;
           img.alt = '';
+          if (f.precropped) img.classList.add('face-precropped');
           slot.appendChild(img);
         });
       });
