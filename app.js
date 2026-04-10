@@ -596,12 +596,14 @@ function renderScoreChart() {
     ctx.fillText(scoreVal + 'p', PAD.left - 6, y + 3);
   }
 
-  // Time labels — show day abbreviation + time, evenly spaced across plot width
+  // Time labels — evenly spaced across plot width with minimum pixel gap
   ctx.textAlign = 'center';
   ctx.fillStyle = '#5a6b5a';
   ctx.font = '10px Inter, sans-serif';
   const DAY_ABBR = ['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'];
-  const timeSteps = Math.min(6, scoreHistory.length);
+  const MIN_LABEL_GAP = 70; // minimum pixels between labels
+  const maxLabels = Math.max(2, Math.floor(plotW / MIN_LABEL_GAP));
+  const timeSteps = Math.min(maxLabels, scoreHistory.length);
   for (let i = 0; i < timeSteps; i++) {
     const idx = Math.round((scoreHistory.length - 1) * i / (timeSteps - 1));
     const t = scoreHistory[idx].time;
@@ -610,7 +612,9 @@ function renderScoreChart() {
     const hh = String(date.getHours()).padStart(2, '0');
     const mm = String(date.getMinutes()).padStart(2, '0');
     const label = `${dayName} ${hh}:${mm}`;
-    ctx.fillText(label, tx(t), H - PAD.bottom + 14);
+    // Place labels evenly across plot width, not at data x-positions
+    const xPos = PAD.left + (plotW * i / (timeSteps - 1));
+    ctx.fillText(label, xPos, H - PAD.bottom + 14);
   }
 
   // Draw round-end markers (vertical dashed lines)
