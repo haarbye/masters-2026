@@ -198,9 +198,11 @@
     .ranking-tabs {
       display: flex;
       gap: 0;
-      background: rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.3);
       border-radius: 2px;
       padding: 2px;
+      position: relative;
+      z-index: 1;
     }
 
     .ranking-tab {
@@ -212,14 +214,14 @@
       letter-spacing: 0.5px;
       border: none;
       background: transparent;
-      color: rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.8);
       cursor: pointer;
       border-radius: 2px;
       transition: all 0.2s;
     }
 
-    .ranking-tab:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.08); }
-    .ranking-tab.active { background: rgba(255,255,255,0.25); color: white; box-shadow: 0 1px 0 var(--masters-gold); }
+    .ranking-tab:hover { color: white; background: rgba(255,255,255,0.12); }
+    .ranking-tab.active { background: rgba(255,255,255,0.3); color: white; box-shadow: 0 1px 0 var(--masters-gold); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
     .ranking-views { position: relative; }
     .ranking-view { display: none; }
