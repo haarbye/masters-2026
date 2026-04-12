@@ -596,6 +596,34 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
   const container = document.getElementById('rankingTable');
   const RNAMES = { 1: 'R1', 2: 'R2', 3: 'R3', 4: 'R4' };
 
+  // Calculate projected Sunday points for each challenger
+  const showSundayProj = currentRound < 4 && leaderboardData.length > 0;
+  const sundayProjections = {};
+  if (showSundayProj) {
+    challengers.forEach((c, i) => {
+      const r4 = calcRoundPoints(c.picks, leaderboardData, 4, false);
+      const exact = r4.details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10);
+      // Podium bonus
+      let podiumCorrect = 0;
+      for (let pi = 0; pi < Math.min(3, c.picks.length); pi++) {
+        const match = findPlayerOnLeaderboard(c.picks[pi], leaderboardData);
+        if (match && match.position === (pi + 1)) podiumCorrect++;
+      }
+      const podiumBonus = podiumCorrect === 3 ? 25 : 0;
+      const projTotal = r4.total + podiumBonus;
+
+      // Build detail parts
+      const parts = [];
+      for (const d of exact) {
+        const info = getPlayerInfo(d.name);
+        parts.push(`${info.name} #${d.pickRank}=#${d.leaderboardPos}: +${d.roundPts}p`);
+      }
+      if (podiumBonus) parts.push('Podium: +25p');
+
+      sundayProjections[c.name] = { total: projTotal, hits: r4.hits, exact: exact.length, podiumBonus, parts };
+    });
+  }
+
   // Sort by total points descending
   const ranked = challengers.map((c, i) => ({
     name: c.name,
@@ -604,6 +632,7 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
     hits: results[i].hits,
     exactMatches: results[i].details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10).length,
     roundPts: Object.keys(resultsByRound || {}).map(r => ({ round: +r, pts: (resultsByRound[r] || [])[i] || 0 })),
+    sundayProj: sundayProjections[c.name] || null,
   })).sort((a, b) => b.total - a.total);
 
   const maxPts = Math.max(...ranked.map(r => r.total), 1);
@@ -634,6 +663,7 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
           <span class="rank-hits">${r.hits} i top 10</span>
           ${r.exactMatches > 0 ? `<span class="rank-exact">${r.exactMatches} eksakt</span>` : ''}
           ${r.roundPts.length > 0 ? `<span class="rank-rounds">${r.roundPts.map(rp => `${RNAMES[rp.round]}: ${rp.pts >= 0 ? '+' : ''}${rp.pts}`).join(' · ')}</span>` : ''}
+          ${r.sundayProj && r.sundayProj.total > 0 ? `<span class="rank-sunday-proj" title="${esc(r.sundayProj.parts.join(', '))}">Sø: +${r.sundayProj.total}p${r.sundayProj.exact > 0 ? ' (' + r.sundayProj.exact + ' eksakt)' : ''}</span>` : ''}
         </div>
         <div class="rank-pts" style="color:${r.color.text}">${r.total}<span class="rank-pts-label"> pts</span>${lead ? `<span class="rank-diff">${lead}</span>` : ''}</div>
       </div>`;
