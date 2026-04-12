@@ -597,7 +597,8 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
   const RNAMES = { 1: 'R1', 2: 'R2', 3: 'R3', 4: 'R4' };
 
   // Calculate projected Sunday points + potential bonuses for each challenger
-  const showSundayProj = currentRound < 4 && leaderboardData.length > 0;
+  // Show Sunday bonus details before AND during R4 (hide only when tournament is fully complete)
+  const showSundayProj = currentRound >= 3 && leaderboardData.length > 0 && !(currentRound >= 4 && tournamentStatus === 'complete');
   const sundayProjections = {};
 
   // Sunday exact match point values
@@ -725,7 +726,9 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
             } else if (sp.podiumBonus) {
               sundayLines.push(`<span class="rsp-exact">ALLE 3 PALL RIKTIG: +25 bonus!</span>`);
             }
-            return sundayLines.length > 0 ? `<div class="rank-sunday-proj">Sø: +${sp.total}p → ${sundayLines.join(' · ')}</div>` : '';
+            const sundayIsLive = currentRound === 4 && tournamentStatus === 'in_progress';
+            const sundayPrefix = sundayIsLive ? 'R4 live' : 'Sø';
+            return sundayLines.length > 0 ? `<div class="rank-sunday-proj">${sundayPrefix}: +${sp.total}p → ${sundayLines.join(' · ')}</div>` : '';
           })() : ''}
         </div>
         <div class="rank-pts" style="color:${r.color.text}">${r.total}<span class="rank-pts-label"> pts</span>${lead ? `<span class="rank-diff">${lead}</span>` : ''}</div>
@@ -1396,7 +1399,8 @@ function renderPickCards(challengers, results) {
 
     // Calculate projected Sunday points with full bonus breakdown
     let sundayHtml = '';
-    const showSundayInCard = currentRound < 4 || (currentRound === 4 && tournamentStatus !== 'complete' && tournamentStatus !== 'in_progress');
+    // Show Sunday details before, during, and until tournament is fully complete
+    const showSundayInCard = leaderboardData.length > 0 && !(currentRound >= 4 && tournamentStatus === 'complete');
     if (showSundayInCard && leaderboardData.length > 0) {
       const SEXACT = { 1: 35, 2: 15, 3: 10 };
       const r4proj = calcRoundPoints(c.picks, leaderboardData, 4, false);
@@ -1470,10 +1474,12 @@ function renderPickCards(challengers, results) {
       }
 
       if (sundayRows) {
+        const sundayLive = currentRound === 4 && tournamentStatus === 'in_progress';
+        const sundayLabel = sundayLive ? 'Søndagspoeng (live)' : 'Søndagspotensial (projeksjon)';
         sundayHtml = `
-          <div class="pick-sunday-proj">
+          <div class="pick-sunday-proj ${sundayLive ? 'sunday-live' : ''}">
             <div class="pick-sunday-header">
-              <span>Søndagspotensial (projeksjon)</span>
+              <span>${sundayLabel}</span>
               <span class="pick-sunday-pts">${r4total > 0 ? '+' + r4total + 'p' : '0p'}</span>
             </div>
             ${sundayRows}
