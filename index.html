@@ -924,6 +924,58 @@
     .cut-risk-pos { color: #e67e22 !important; font-weight: 700; }
     .cut-risk-pts { color: #c0392b !important; font-weight: 700; }
 
+    /* ===== DAILY BREAKDOWN ===== */
+    .daily-breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .daily-card {
+      background: #fff;
+      border: 1px solid #e5e1d5;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .daily-card-header {
+      background: var(--masters-green);
+      color: #fff;
+      padding: 10px 14px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .daily-card-header .daily-pts-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+    .daily-card.future { opacity: 0.4; }
+    .daily-card.future .daily-card-header { background: #9ca3af; }
+    .daily-player-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-bottom: 1px solid #f3f1eb;
+      font-size: 13px;
+      gap: 8px;
+    }
+    .daily-player-row:last-child { border-bottom: none; }
+    .daily-player-row .dp-rank { min-width: 18px; font-weight: 700; color: #8b7e6a; font-size: 12px; }
+    .daily-player-row .dp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .daily-player-row .dp-name { flex: 1; font-weight: 600; color: #1a1a1a; }
+    .daily-player-row .dp-detail { color: #6b6350; font-size: 11px; flex-shrink: 0; }
+    .daily-player-row .dp-pts { min-width: 40px; text-align: right; font-weight: 700; font-size: 13px; }
+    .daily-player-row .dp-pts.positive { color: var(--masters-green); }
+    .daily-player-row .dp-pts.negative { color: #dc2626; }
+    .daily-player-row .dp-pts.zero { color: #d1c9b0; }
+    .daily-player-row.dp-leader { background: #f0fdf4; }
+    .daily-player-row .dp-hits { font-size: 10px; color: #8b7e6a; }
+
     .pick-pts { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
     .pick-pts.has-pts { color: var(--masters-green); }
     .pick-pts.no-pts { color: #d1c9b0; }
@@ -2310,12 +2362,18 @@
   </div>
 
   <div class="container">
+    <!-- News banner (dismissable) -->
+    <div class="news-banner" id="newsBanner" data-news-id="news-scoring-fix-r3">
+      <strong>Viktig:</strong> Det ble oppdaget en feil i poengberegningen som ga -2 for cuttede spillere ogs&aring; i runde 3. Dette er n&aring; rettet &mdash; cut-straff gjelder kun i runde 2. Alle poeng er korrigert. Lykke til p&aring; s&oslash;ndagen &mdash; det er mange bonuspoeng &aring; hente for de som fortsatt har spillere i topp 10!
+      <button class="news-dismiss" onclick="dismissNews()" title="Lukk">&times;</button>
+    </div>
+
     <!-- Leader quote -->
     <div class="leader-quote">
-      <span class="leader-quote-label">Dagens melding fra lederen etter runde 3</span>
+      <span class="leader-quote-label">Dagens melding fra lederen f&oslash;r finalerunden</span>
       <div class="leader-quote-text">
-        Tre runder. Fortsatt p&aring; topp. Noen kaller det flaks &mdash; jeg kaller det strategi, instinkt og en uhyggelig evne til &aring; lese greenen fra sofaen. Ola puster meg i nakken, men la oss v&aelig;re &aelig;rlige: &eacute;n ledelse er alt som trengs. Til Sebastian og Klaus &mdash; ikke bekymre dere, cut-straffen bygger karakter. Vi sees p&aring; s&oslash;ndag, der legender f&oslash;des.
-        <span style="font-style:normal;color:var(--masters-green);display:block;margin-top:8px">&mdash; Guttorm</span>
+        Fire dager. &Eacute;n runde igjen. Alt kan snu. S&oslash;ndagen er der drømmer g&aring;r i oppfyllelse &mdash; eller knuses fullstendig. Eksakt riktig vinner gir <strong>35 poeng</strong>, riktig topp 3 gir <strong>+25 bonus</strong>, og alle i topp 10 scorer. Har du fortsatt spillere igjen i feltet? Da er du med. Har du ikke det? Da heier du p&aring; kaos. Uansett &mdash; kos dere med finalen!
+        <span style="font-style:normal;color:var(--masters-green);display:block;margin-top:8px">&mdash; Turneringskomit&eacute;en</span>
       </div>
     </div>
 
@@ -2342,6 +2400,14 @@
 
     <!-- Chat (mobile position: between ranking and picks) -->
     <div class="chat-card chat-mobile-only" id="chatMobile"></div>
+
+    <!-- Daily Points Breakdown -->
+    <div class="collapsible-section" data-section="daily-breakdown">
+      <div class="collapsible-header" onclick="toggleSection('daily-breakdown')">Poengoversikt per runde <span class="toggle-icon">▲</span></div>
+      <div class="collapsible-body">
+        <div id="dailyBreakdown"></div>
+      </div>
+    </div>
 
     <!-- Admin panel (hidden, access via ?admin=masters2026) -->
     <div id="adminSection" style="display:none"></div>

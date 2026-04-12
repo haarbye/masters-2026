@@ -245,9 +245,9 @@ function getFlagEmoji(countryAlt) {
 // --- Calculate points ---
 //
 // R1–R3 (torsdag–lørdag):
-//   Topp 10: R1=1p, R2=2p, R3=3p
-//   Eksakt plassering bonus: R1=+2p, R2=+3p, R3=+5p
-//   CUT: -2p (slår inn etter fredag)
+//   Topp 10: R1=2p, R2=3p, R3=4p
+//   Eksakt plassering bonus: R1=+1p, R2=+2p, R3=+4p  (totalt: 3/5/8)
+//   CUT: -2p (kun i R2, når cutten skjer)
 //
 // R4 (søndag) — full pott:
 //   Eksakt riktig plass:  #1=35p  #2=15p  #3=10p  #4–10=4p
@@ -955,6 +955,100 @@ function renderRoundBreakdown(challengers, resultsByRound, activeRound) {
   container.innerHTML = html;
 }
 
+// ============================================================
+// DAILY POINTS BREAKDOWN — oversiktlig visning per runde
+// ============================================================
+function renderDailyBreakdown(challengers, resultsByRound, currentRound) {
+  const container = document.getElementById('dailyBreakdown');
+  if (!container) return;
+
+  const LATE_REG_SET = new Set();
+  challengers.forEach(c => {
+    if (c.createdAt && new Date(c.createdAt) >= LATE_REG_CUTOFF) LATE_REG_SET.add(c.name);
+  });
+
+  let html = '<div class="daily-breakdown-grid">';
+
+  for (let r = 1; r <= 4; r++) {
+    const isFuture = r > currentRound;
+    const isLive = r === currentRound && tournamentStatus !== 'complete';
+    const roundLabel = ROUND_NAMES[r] + (isLive ? ' (live)' : '');
+    const ptsLabel = r < 4 ? `Top 10 = ${TOP10_PTS_PER_ROUND[r]}p` : 'Full scoring';
+
+    // Build player scores for this round
+    const roundScores = challengers.map((c, i) => {
+      const pts = resultsByRound[r]?.[i] || 0;
+      const isLate = LATE_REG_SET.has(c.name);
+      const skipped = r === 1 && isLate;
+
+      // Get detailed breakdown for this round
+      let hits = 0, cuts = 0, exact = 0;
+      if (!isFuture && !skipped) {
+        const isCompletedRound = r < currentRound;
+        const res = calcRoundPoints(c.picks, leaderboardData, r, isCompletedRound);
+        hits = res.hits;
+        cuts = res.cuts;
+        exact = res.details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10).length;
+      }
+
+      return {
+        name: c.name,
+        color: getColor(i),
+        pts: skipped ? 0 : pts,
+        skipped,
+        hits,
+        cuts,
+        exact,
+      };
+    });
+
+    // Sort by points descending
+    const sorted = [...roundScores].sort((a, b) => b.pts - a.pts);
+
+    let rowsHtml = '';
+    if (isFuture) {
+      rowsHtml = '<div class="daily-player-row"><div class="dp-name" style="color:#9ca3af;text-align:center;width:100%">Ikke startet</div></div>';
+    } else {
+      sorted.forEach((s, idx) => {
+        const ptsClass = s.pts > 0 ? 'positive' : s.pts < 0 ? 'negative' : 'zero';
+        const ptsStr = s.pts > 0 ? '+' + s.pts : s.pts === 0 ? '0' : String(s.pts);
+        const isLeader = idx === 0 && s.pts > 0;
+        let detail = '';
+        if (s.skipped) {
+          detail = 'Hoppet over';
+        } else if (s.hits > 0 || s.cuts > 0) {
+          const parts = [];
+          if (s.hits > 0) parts.push(s.hits + ' treff');
+          if (s.exact > 0) parts.push(s.exact + ' eksakt');
+          if (s.cuts > 0) parts.push(s.cuts + ' cut');
+          detail = parts.join(', ');
+        }
+
+        rowsHtml += `
+          <div class="daily-player-row ${isLeader ? 'dp-leader' : ''}">
+            <div class="dp-rank">${idx + 1}.</div>
+            <div class="dp-dot" style="background:${s.color.dot}"></div>
+            <div class="dp-name" style="color:${s.color.text}">${esc(s.name)}</div>
+            <div class="dp-detail">${detail}</div>
+            <div class="dp-pts ${ptsClass}">${ptsStr}</div>
+          </div>`;
+      });
+    }
+
+    html += `
+      <div class="daily-card ${isFuture ? 'future' : ''}">
+        <div class="daily-card-header">
+          <span>${roundLabel}</span>
+          <span class="daily-pts-label">${ptsLabel}</span>
+        </div>
+        ${rowsHtml}
+      </div>`;
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
 // Track which cards are COLLAPSED (persists across re-renders)
 // All cards are open by default — user clicks to collapse
 const collapsedCards = new Set();
@@ -994,11 +1088,11 @@ function renderPickCards(challengers, results) {
       }
 
       let posClass = 'outside', posText = '—', rowClass = '';
-      if (d.isCut && d.roundPts < 0) {
+      if (d.isCut) {
         posClass = 'cut';
         posText = 'CUT';
         rowClass = 'is-cut';
-      } else if (d.isDQ && d.roundPts < 0) {
+      } else if (d.isDQ) {
         posClass = 'cut';
         posText = 'DQ';
         rowClass = 'is-cut';
@@ -2025,6 +2119,7 @@ async function updateDashboard() {
     renderTicker(leaderboardData, challengers);
     renderRanking(challengers, finalResults, resultsByRound, currentRound);
     renderRoundBreakdown(challengers, resultsByRound, currentRound);
+    renderDailyBreakdown(challengers, resultsByRound, currentRound);
     renderPickCards(challengers, finalResults);
     renderLeaderboard(leaderboardData, challengers);
 
