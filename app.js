@@ -619,7 +619,7 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
     const rowClass = idx === 0 ? 'rank-gold' : idx === 1 ? 'rank-silver' : idx === 2 ? 'rank-bronze' : '';
 
     html += `
-      <div class="rank-row ${rowClass}">
+      <div class="rank-row ${rowClass}" data-goto-card="${escAttr(r.name)}" style="cursor:pointer" title="Vis ${esc(r.name)} sine picks">
         <div class="rank-pos">${medal}</div>
         <div class="rank-main">
           <div class="rank-name">
@@ -640,6 +640,43 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
   });
 
   container.innerHTML = html;
+
+  // Wire up click-to-scroll from ranking rows to pick cards
+  container.querySelectorAll('.rank-row[data-goto-card]').forEach(row => {
+    row.addEventListener('click', () => {
+      const name = row.dataset.gotoCard;
+      // Ensure picks section is expanded
+      const picksSection = document.querySelector('.collapsible-section[data-section="picks"]');
+      if (picksSection) {
+        const body = picksSection.querySelector('.collapsible-body');
+        if (body && body.style.display === 'none') {
+          toggleSection('picks');
+        }
+      }
+      // Find the matching pick card and expand + scroll to it
+      const cards = document.querySelectorAll('.pick-card-header[data-name]');
+      for (const header of cards) {
+        if (header.dataset.name === name) {
+          // Expand if collapsed
+          if (collapsedCards.has(name)) {
+            collapsedCards.delete(name);
+            const card = header.closest('.pick-card');
+            const body = card.querySelector('.pick-body');
+            const toggle = header.querySelector('.pick-toggle');
+            body.style.display = '';
+            toggle.textContent = '▲';
+          }
+          // Scroll into view
+          const card = header.closest('.pick-card');
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight briefly
+          card.style.boxShadow = '0 0 0 3px #d4af37';
+          setTimeout(() => { card.style.boxShadow = ''; }, 2000);
+          break;
+        }
+      }
+    });
+  });
 
   // Save current positions (delayed so user sees changes first)
   setTimeout(() => saveRankings(ranked), 5000);
