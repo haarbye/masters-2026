@@ -1043,8 +1043,55 @@ function renderDailyBreakdown(challengers, resultsByRound, currentRound) {
     const sorted = [...roundScores].sort((a, b) => b.pts - a.pts);
 
     let rowsHtml = '';
-    if (isFuture) {
+    // For Sunday (R4) before it starts: show projected points based on current standings
+    const isProjectedSunday = isFuture && r === 4 && leaderboardData.length > 0;
+
+    if (isFuture && !isProjectedSunday) {
       rowsHtml = '<div class="daily-player-row"><div class="dp-name" style="color:#9ca3af;text-align:center;width:100%">Ikke startet</div></div>';
+    } else if (isProjectedSunday) {
+      // Calculate projected Sunday points using current leaderboard positions
+      const projScores = challengers.map((c, i) => {
+        const res = calcRoundPoints(c.picks, leaderboardData, 4, false);
+        const exact = res.details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10).length;
+        // Check podium bonus
+        let podiumBonus = 0;
+        let podiumCorrect = 0;
+        for (let pi = 0; pi < Math.min(3, c.picks.length); pi++) {
+          const match = findPlayerOnLeaderboard(c.picks[pi], leaderboardData);
+          if (match && match.position === (pi + 1)) podiumCorrect++;
+        }
+        if (podiumCorrect === 3) podiumBonus = 25;
+
+        return {
+          name: c.name,
+          color: getColor(i),
+          pts: res.total + podiumBonus,
+          hits: res.hits,
+          exact,
+          podiumBonus,
+        };
+      });
+
+      const projSorted = [...projScores].sort((a, b) => b.pts - a.pts);
+      projSorted.forEach((s, idx) => {
+        const ptsClass = s.pts > 0 ? 'positive' : s.pts < 0 ? 'negative' : 'zero';
+        const ptsStr = s.pts > 0 ? '+' + s.pts : s.pts === 0 ? '0' : String(s.pts);
+        const isLeader = idx === 0 && s.pts > 0;
+        const parts = [];
+        if (s.hits > 0) parts.push(s.hits + ' i top 10');
+        if (s.exact > 0) parts.push(s.exact + ' eksakt');
+        if (s.podiumBonus > 0) parts.push('+25 podium!');
+        const detail = parts.join(', ');
+
+        rowsHtml += `
+          <div class="daily-player-row ${isLeader ? 'dp-leader' : ''}">
+            <div class="dp-rank">${idx + 1}.</div>
+            <div class="dp-dot" style="background:${s.color.dot}"></div>
+            <div class="dp-name" style="color:${s.color.text}">${esc(s.name)}</div>
+            <div class="dp-detail">${detail}</div>
+            <div class="dp-pts ${ptsClass}">${ptsStr}</div>
+          </div>`;
+      });
     } else {
       sorted.forEach((s, idx) => {
         const ptsClass = s.pts > 0 ? 'positive' : s.pts < 0 ? 'negative' : 'zero';
@@ -1072,11 +1119,15 @@ function renderDailyBreakdown(challengers, resultsByRound, currentRound) {
       });
     }
 
+    const cardClass = (isFuture && !isProjectedSunday) ? 'future' : '';
+    const headerLabel = isProjectedSunday ? 'Søndag (projeksjon)' : roundLabel;
+    const headerPtsLabel = isProjectedSunday ? 'Basert på nåværende pos.' : ptsLabel;
+
     html += `
-      <div class="daily-card ${isFuture ? 'future' : ''}">
-        <div class="daily-card-header">
-          <span>${roundLabel}</span>
-          <span class="daily-pts-label">${ptsLabel}</span>
+      <div class="daily-card ${cardClass} ${isProjectedSunday ? 'projected' : ''}">
+        <div class="daily-card-header ${isProjectedSunday ? 'projected-header' : ''}">
+          <span>${headerLabel}</span>
+          <span class="daily-pts-label">${headerPtsLabel}</span>
         </div>
         ${rowsHtml}
       </div>`;
@@ -1250,6 +1301,42 @@ function renderPickCards(challengers, results) {
 
     const summaryText = `${hitsInTop10} i top 10${exactMatches ? ` · ${exactMatches} eksakt` : ''}${bestPos ? ` · beste #${bestPos}` : ''}`;
 
+    // Calculate projected Sunday points if R4 hasn't started yet
+    let sundayHtml = '';
+    if (currentRound < 4 || (currentRound === 4 && tournamentStatus !== 'complete' && tournamentStatus !== 'in_progress')) {
+      const r4proj = calcRoundPoints(c.picks, leaderboardData, 4, false);
+      // Check podium bonus
+      let podiumCorrect = 0;
+      for (let pi = 0; pi < Math.min(3, c.picks.length); pi++) {
+        const match = findPlayerOnLeaderboard(c.picks[pi], leaderboardData);
+        if (match && match.position === (pi + 1)) podiumCorrect++;
+      }
+      const podiumBonus = podiumCorrect === 3 ? 25 : 0;
+      const r4total = r4proj.total + podiumBonus;
+      const r4exact = r4proj.details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10).length;
+
+      if (r4total !== 0 || r4proj.hits > 0) {
+        let r4details = [];
+        for (const d of r4proj.details) {
+          if (d.roundPts > 0) {
+            const info = getPlayerInfo(d.name);
+            const isExact = d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10;
+            r4details.push(`${info.name} #${d.leaderboardPos}${isExact ? ' eksakt' : ''}: +${d.roundPts}p`);
+          }
+        }
+        if (podiumBonus) r4details.push('Podium-bonus: +25p');
+
+        sundayHtml = `
+          <div class="pick-sunday-proj">
+            <div class="pick-sunday-header">
+              <span>Søndagspotensial</span>
+              <span class="pick-sunday-pts">${r4total > 0 ? '+' + r4total + 'p' : '0p'}</span>
+            </div>
+            <div class="pick-sunday-detail">${r4details.join(' · ')}</div>
+          </div>`;
+      }
+    }
+
     html += `
       <div class="pick-card ${isExpanded ? 'expanded' : 'collapsed'}">
         <div class="pick-card-header" data-name="${escAttr(c.name)}" style="cursor:pointer">
@@ -1265,6 +1352,7 @@ function renderPickCards(challengers, results) {
         </div>
         <div class="pick-body" style="${isExpanded ? '' : 'display:none'}">
           ${rowsHtml}
+          ${sundayHtml}
         </div>
       </div>`;
   });
