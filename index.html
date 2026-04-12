@@ -382,7 +382,15 @@
     .rank-hits { font-size: 11px; color: var(--text-muted); }
     .rank-exact { font-size: 11px; color: var(--masters-green); font-weight: 600; }
     .rank-rounds { font-size: 10px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.3px; display: block; margin-top: 1px; }
-    .rank-sunday-proj { font-size: 10px; color: #d4af37; font-weight: 700; display: block; margin-top: 1px; cursor: help; }
+    .rank-sunday-proj {
+      font-size: 10px; font-weight: 600; display: block; margin-top: 3px;
+      color: #d4af37; line-height: 1.6;
+    }
+    .rank-sunday-proj .rsp-exact { color: #d4af37; font-weight: 700; }
+    .rank-sunday-proj .rsp-near { color: var(--masters-green); }
+    .rank-sunday-proj .rsp-hit { color: #6b6350; }
+    .rank-sunday-proj .rsp-bubble { color: #9ca3af; font-style: italic; }
+    .rank-sunday-proj .rsp-podium { color: #c026d3; font-weight: 700; }
 
     .rank-pts { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; font-weight: 900; min-width: 80px; text-align: right; }
     .rank-pts-label { font-size: 12px; font-weight: 600; opacity: 0.6; }
@@ -1077,12 +1085,38 @@
       letter-spacing: 0.5px;
     }
     .pick-sunday-pts { font-size: 15px; color: #d4af37; }
-    .pick-sunday-detail {
-      font-size: 11px;
-      color: #6b6350;
-      margin-top: 4px;
-      line-height: 1.5;
+    .sp-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
     }
+    .sp-row:last-child { border-bottom: none; }
+    .sp-slot { min-width: 22px; font-weight: 700; color: #8b7e6a; }
+    .sp-name { flex: 1; font-weight: 600; color: #1a1a1a; }
+    .sp-pos { color: #6b6350; font-size: 11px; min-width: 44px; }
+    .sp-pts { font-weight: 700; min-width: 50px; text-align: right; }
+    .sp-pts.sp-exact { color: #d4af37; }
+    .sp-pts.sp-hit { color: var(--masters-green); }
+    .sp-pts.sp-zero { color: #d1c9b0; }
+    .sp-potential {
+      font-size: 10px;
+      color: #9333ea;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .sp-row-exact { background: rgba(212,175,55,0.08); }
+    .sp-row-bubble { opacity: 0.6; font-style: italic; }
+    .sp-podium-bonus {
+      padding: 6px 0 2px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #c026d3;
+      text-align: center;
+    }
+    .sp-podium-bonus.sp-exact { color: #d4af37; font-size: 13px; }
 
     .pick-pts { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
     .pick-pts.has-pts { color: var(--masters-green); }
