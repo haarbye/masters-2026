@@ -1086,6 +1086,87 @@ function renderDailyBreakdown(challengers, resultsByRound, currentRound) {
   container.innerHTML = html;
 }
 
+// ============================================================
+// WINNER CELEBRATION — shown after R4 is complete
+// ============================================================
+function renderWinnerCelebration(challengers, results, resultsByRound) {
+  let container = document.getElementById('winnerCelebration');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'winnerCelebration';
+    const newsEl = document.getElementById('newsBanner');
+    const quoteEl = document.querySelector('.leader-quote');
+    const insertBefore = newsEl || quoteEl;
+    if (insertBefore) {
+      insertBefore.parentNode.insertBefore(container, insertBefore);
+    } else {
+      document.querySelector('.container')?.prepend(container);
+    }
+  }
+
+  // Sort challengers by total
+  const ranked = challengers.map((c, i) => ({
+    name: c.name,
+    color: getColor(i),
+    total: results[i].total,
+    hits: results[i].hits,
+    roundPts: Object.keys(resultsByRound || {}).map(r => (resultsByRound[+r] || [])[i] || 0),
+  })).sort((a, b) => b.total - a.total);
+
+  const winner = ranked[0];
+  const second = ranked[1];
+  const third = ranked[2];
+
+  // Check for tie
+  const isTied = winner.total === second.total;
+
+  // Also find the Masters Tournament winner from leaderboard
+  const mastersWinner = leaderboardData.find(p => p.position === 1);
+  const mastersWinnerName = mastersWinner ? mastersWinner.name : '';
+  const mastersWinnerInfo = mastersWinnerName ? getPlayerInfo(mastersWinnerName) : null;
+
+  container.innerHTML = `
+    <div class="winner-card">
+      <div class="winner-header">
+        <div class="winner-trophy">🏆</div>
+        <h2 class="winner-title">${isTied ? 'Delt seier!' : 'Vi har en vinner!'}</h2>
+      </div>
+      <div class="winner-podium">
+        <div class="podium-spot podium-2">
+          <div class="podium-medal">🥈</div>
+          <div class="podium-name" style="color:${second.color.text}">${esc(second.name)}</div>
+          <div class="podium-pts">${second.total} pts</div>
+        </div>
+        <div class="podium-spot podium-1">
+          <div class="podium-medal">🥇</div>
+          <div class="podium-name" style="color:${winner.color.text}">${esc(winner.name)}</div>
+          <div class="podium-pts">${winner.total} pts</div>
+          <div class="podium-crown">👑</div>
+        </div>
+        <div class="podium-spot podium-3">
+          <div class="podium-medal">🥉</div>
+          <div class="podium-name" style="color:${third.color.text}">${esc(third.name)}</div>
+          <div class="podium-pts">${third.total} pts</div>
+        </div>
+      </div>
+      ${mastersWinnerInfo ? `
+      <div class="winner-masters">
+        <span class="winner-masters-flag">${mastersWinnerInfo.flag}</span>
+        <span>Masters 2026-vinner: <strong>${esc(mastersWinnerInfo.name)}</strong></span>
+      </div>` : ''}
+      <div class="winner-standings">
+        ${ranked.map((r, i) => `
+          <div class="winner-row ${i === 0 ? 'winner-row-first' : ''}">
+            <span class="winner-row-pos">${i + 1}.</span>
+            <span class="winner-row-dot" style="background:${r.color.dot}"></span>
+            <span class="winner-row-name">${esc(r.name)}</span>
+            <span class="winner-row-rounds">${r.roundPts.map((p, ri) => `R${ri+1}: ${p >= 0 ? '+' : ''}${p}`).join(' · ')}</span>
+            <span class="winner-row-total" style="color:${r.color.text}">${r.total} pts</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
 // Track which cards are COLLAPSED (persists across re-renders)
 // All cards are open by default — user clicks to collapse
 const collapsedCards = new Set();
@@ -2153,6 +2234,11 @@ async function updateDashboard() {
 
     // Render everything
     renderStatus(tournamentStatus, currentRound);
+
+    // Check if tournament is finished → show winner celebration
+    if (currentRound >= 4 && tournamentStatus === 'complete') {
+      renderWinnerCelebration(challengers, finalResults, resultsByRound);
+    }
     renderTicker(leaderboardData, challengers);
     renderRanking(challengers, finalResults, resultsByRound, currentRound);
     renderRoundBreakdown(challengers, resultsByRound, currentRound);

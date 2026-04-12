@@ -976,6 +976,85 @@
     .daily-player-row.dp-leader { background: #f0fdf4; }
     .daily-player-row .dp-hits { font-size: 10px; color: #8b7e6a; }
 
+    /* ===== WINNER CELEBRATION ===== */
+    .winner-card {
+      background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 50%, #1a472a 100%);
+      border: 2px solid #d4af37;
+      border-radius: 2px;
+      padding: 28px 20px;
+      margin-bottom: var(--section-gap);
+      text-align: center;
+      color: #fff;
+    }
+    .winner-header { margin-bottom: 20px; }
+    .winner-trophy { font-size: 48px; margin-bottom: 4px; }
+    .winner-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #d4af37;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .winner-podium {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .podium-spot {
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      padding: 16px 14px 12px;
+      position: relative;
+      min-width: 90px;
+    }
+    .podium-1 {
+      min-height: 120px;
+      border: 1px solid #d4af37;
+      background: rgba(212,175,55,0.15);
+    }
+    .podium-2 { min-height: 95px; border: 1px solid rgba(192,192,192,0.4); }
+    .podium-3 { min-height: 80px; border: 1px solid rgba(205,127,50,0.4); }
+    .podium-medal { font-size: 28px; margin-bottom: 6px; }
+    .podium-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .podium-pts { font-size: 13px; opacity: 0.9; }
+    .podium-crown {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 22px;
+    }
+    .winner-masters {
+      font-size: 14px;
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+    .winner-masters-flag { margin-right: 6px; }
+    .winner-standings {
+      background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+      padding: 10px 14px;
+      text-align: left;
+    }
+    .winner-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      font-size: 13px;
+      gap: 8px;
+    }
+    .winner-row:last-child { border-bottom: none; }
+    .winner-row-first { font-weight: 700; }
+    .winner-row-pos { min-width: 20px; color: #d4af37; font-weight: 700; }
+    .winner-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .winner-row-name { flex: 1; }
+    .winner-row-rounds { font-size: 11px; opacity: 0.7; }
+    .winner-row-total { min-width: 50px; text-align: right; font-weight: 700; }
+
     .pick-pts { font-size: 13px; font-weight: 700; min-width: 32px; text-align: right; }
     .pick-pts.has-pts { color: var(--masters-green); }
     .pick-pts.no-pts { color: #d1c9b0; }
