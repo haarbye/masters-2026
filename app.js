@@ -596,75 +596,19 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
   const container = document.getElementById('rankingTable');
   const RNAMES = { 1: 'R1', 2: 'R2', 3: 'R3', 4: 'R4' };
 
-  // Calculate projected Sunday points + potential bonuses for each challenger
-  // Show Sunday bonus details before AND during R4 (hide only when tournament is fully complete)
+  // Sunday exact match + podium badges (minimal — just badges, not verbose text)
   const showSundayProj = currentRound >= 3 && leaderboardData.length > 0 && !(currentRound >= 4 && tournamentStatus === 'complete');
   const sundayProjections = {};
-
-  // Sunday exact match point values
-  const SUNDAY_EXACT = { 1: 35, 2: 15, 3: 10 }; // 4-10: 4p
-  const SUNDAY_PICK1_PODIUM = 10; // pick #1 ends on podium (not winner)
-
   if (showSundayProj) {
     challengers.forEach((c, i) => {
       const r4 = calcRoundPoints(c.picks, leaderboardData, 4, false);
-
-      // Podium bonus check
+      const exact = r4.details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10).length;
       let podiumCorrect = 0;
       for (let pi = 0; pi < Math.min(3, c.picks.length); pi++) {
         const match = findPlayerOnLeaderboard(c.picks[pi], leaderboardData);
         if (match && match.position === (pi + 1)) podiumCorrect++;
       }
-      const podiumBonus = podiumCorrect === 3 ? 25 : 0;
-      const projTotal = r4.total + podiumBonus;
-
-      // Build detailed breakdown per pick: current pts, potential if exact, distance to exact
-      const pickDetails = [];
-      for (const d of r4.details) {
-        if (d.isCut || d.isDQ) continue;
-        const match = findPlayerOnLeaderboard(d.name, leaderboardData);
-        if (!match) continue;
-        const pos = match.position;
-        const slot = d.pickRank;
-        const info = getPlayerInfo(d.name);
-        const isExact = pos === slot && pos <= 10;
-        const inTop10 = pos !== null && pos <= 10;
-        const currentPts = d.roundPts;
-
-        // What would they get if position matched their slot?
-        let exactPts = 0;
-        if (slot <= 3) exactPts = SUNDAY_EXACT[slot] || 4;
-        else if (slot <= 10) exactPts = 4;
-
-        // What would they get with pick #1 on podium?
-        const pick1PodiumPts = (slot === 1 && pos >= 2 && pos <= 3) ? SUNDAY_PICK1_PODIUM : 0;
-
-        const detail = {
-          name: info.name,
-          slot,
-          pos,
-          currentPts,
-          isExact,
-          inTop10,
-          exactPts,
-          pick1PodiumPts,
-          distance: pos !== null ? Math.abs(slot - pos) : null,
-        };
-
-        // Only include if relevant (in top 10, near top 10, or has potential)
-        if (inTop10 || (pos !== null && pos <= 15)) {
-          pickDetails.push(detail);
-        }
-      }
-
-      sundayProjections[c.name] = {
-        total: projTotal,
-        hits: r4.hits,
-        exact: r4.details.filter(d => d.leaderboardPos !== null && d.pickRank === d.leaderboardPos && d.leaderboardPos <= 10).length,
-        podiumBonus,
-        podiumCorrect,
-        pickDetails,
-      };
+      sundayProjections[c.name] = { exact, podiumBonus: podiumCorrect === 3 ? 25 : 0 };
     });
   }
 
@@ -707,29 +651,8 @@ function renderRanking(challengers, results, resultsByRound, currentRound) {
           <span class="rank-hits">${r.hits} i top 10</span>
           ${r.exactMatches > 0 ? `<span class="rank-exact">${r.exactMatches} eksakt</span>` : ''}
           ${r.roundPts.length > 0 ? `<span class="rank-rounds">${r.roundPts.map(rp => `${RNAMES[rp.round]}: ${rp.pts >= 0 ? '+' : ''}${rp.pts}`).join(' · ')}</span>` : ''}
-          ${r.sundayProj ? (() => {
-            const sp = r.sundayProj;
-            let sundayLines = [];
-            for (const pd of sp.pickDetails) {
-              if (pd.isExact) {
-                sundayLines.push(`<span class="rsp-exact">${esc(pd.name)} #${pd.slot}=#${pd.pos}: +${pd.currentPts}p ✓</span>`);
-              } else if (pd.inTop10 && pd.distance <= 3) {
-                sundayLines.push(`<span class="rsp-near">${esc(pd.name)} valgt #${pd.slot}, nå #${pd.pos} (+${pd.currentPts}p → eksakt=${pd.exactPts}p)</span>`);
-              } else if (pd.inTop10) {
-                sundayLines.push(`<span class="rsp-hit">${esc(pd.name)} #${pd.pos}: +${pd.currentPts}p</span>`);
-              } else if (pd.pos <= 12) {
-                sundayLines.push(`<span class="rsp-bubble">${esc(pd.name)} valgt #${pd.slot}, nå #${pd.pos} — ${pd.pos - 10} fra top 10</span>`);
-              }
-            }
-            if (sp.podiumCorrect > 0 && sp.podiumCorrect < 3) {
-              sundayLines.push(`<span class="rsp-podium">${sp.podiumCorrect}/3 pall riktig (3/3 = +25 bonus)</span>`);
-            } else if (sp.podiumBonus) {
-              sundayLines.push(`<span class="rsp-exact">ALLE 3 PALL RIKTIG: +25 bonus!</span>`);
-            }
-            const sundayIsLive = currentRound === 4 && tournamentStatus === 'in_progress';
-            const sundayPrefix = sundayIsLive ? 'R4 live' : 'Sø';
-            return sundayLines.length > 0 ? `<div class="rank-sunday-proj">${sundayPrefix}: +${sp.total}p → ${sundayLines.join(' · ')}</div>` : '';
-          })() : ''}
+          ${r.sundayProj && r.sundayProj.exact > 0 ? `<span class="rank-sunday-proj">${r.sundayProj.exact} eksakt</span>` : ''}
+          ${r.sundayProj && r.sundayProj.podiumBonus ? `<span class="rank-sunday-proj rsp-podium">+25 pall-bonus!</span>` : ''}
         </div>
         <div class="rank-pts" style="color:${r.color.text}">${r.total}<span class="rank-pts-label"> pts</span>${lead ? `<span class="rank-diff">${lead}</span>` : ''}</div>
       </div>`;
