@@ -337,8 +337,8 @@ function calcRoundPoints(picks, leaderboard, roundNum, useRoundPositions) {
         // Søndag: DQ gir straff
         pts = CUT_PENALTY;
         cuts++;
-      } else if (!isSunday && isCut && roundNum >= 2) {
-        // R2–R3: CUT gir straff (ikke R1 — CUT skjer etter fredag)
+      } else if (!isSunday && isCut && roundNum === 2) {
+        // CUT-straff kun i R2 (når cutten skjer). R3+: cuttede spillere gir bare 0.
         pts = CUT_PENALTY;
         cuts++;
       } else if (!isSunday && belowProjCut && roundNum === 2) {
