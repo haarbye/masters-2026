@@ -1199,6 +1199,19 @@ function renderWinnerCelebration(challengers, results, resultsByRound) {
   const mastersWinnerName = mastersWinner ? mastersWinner.name : '';
   const mastersWinnerInfo = mastersWinnerName ? getPlayerInfo(mastersWinnerName) : null;
 
+  // Winner quotes — personlig melding basert på vinner
+  const WINNER_QUOTES = {
+    'Guttorm': 'Dere trodde jeg skrøt for mye. Nå vet dere hvorfor. Takk for kampen — ses neste år, da forsvarer jeg tittelen.',
+    'Sebastian': 'Systemet funka, picksa satt, og til slutt stod jeg igjen som konge. Kunne ikke vært mer fortjent.',
+    'Ola': 'Rolig og strategisk hele veien — det er slik man vinner en Masters-tipping. GG alle sammen!',
+    'Havard': 'Ingen trodde på meg, men her står jeg med pokalen. Patrick Reed hadde vært stolt.',
+    'Svartberg': 'Svartberg på topp — akkurat som det skulle være. Gratulerer til alle, men spesielt til meg selv.',
+    'Klaus': 'Fleetwood-strategien leverte. Takk til alle som tipset mot meg — motivasjonen var uvurderlig.',
+    'August': 'Ung, sulten, og nå Masters-mester. Dette er bare begynnelsen.',
+    'Fredagstaco': 'Rory-gambiten betalte seg. Taco-fredag i all evighet!',
+  };
+  const winnerQuote = WINNER_QUOTES[winner.name] || 'Takk for kampen, gratulerer til alle som deltok!';
+
   container.innerHTML = `
     <div class="winner-card">
       <div class="winner-header">
@@ -1228,6 +1241,11 @@ function renderWinnerCelebration(challengers, results, resultsByRound) {
         <span class="winner-masters-flag">${mastersWinnerInfo.flag}</span>
         <span>Masters 2026-vinner: <strong>${esc(mastersWinnerInfo.name)}</strong></span>
       </div>` : ''}
+      <div class="winner-quote">
+        <div class="winner-quote-label">Fra vinneren:</div>
+        <div class="winner-quote-text">"${esc(winnerQuote)}"</div>
+        <div class="winner-quote-author">— ${esc(winner.name)}</div>
+      </div>
       <div class="winner-standings">
         ${ranked.map((r, i) => `
           <div class="winner-row ${i === 0 ? 'winner-row-first' : ''}">
